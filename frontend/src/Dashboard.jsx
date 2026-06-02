@@ -16,6 +16,10 @@ export default function Dashboard({logout, usr, addDoctor, showDoctor, docErr}){
     return(
         <>
         <h2>Dashboard</h2>
+            <Link to="/patients">
+                View Patients
+            </Link>
+            <h3>All Doctors:</h3>
         {usr.map((u)=>(
             <li key={u._id}>
                 <Link to={`/doctor/${u._id}`}>
@@ -23,6 +27,7 @@ export default function Dashboard({logout, usr, addDoctor, showDoctor, docErr}){
                 </Link>
             </li>
         ))}
+
         <button onClick={logout}>Logout</button>
             {docErr && <p>{docErr}</p>}  
         <form onSubmit={handleSubmit(onSubmit)}>

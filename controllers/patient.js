@@ -35,7 +35,7 @@ module.exports.getPatients = async(req,res)=>{
 module.exports.showOnePatient = async(req,res)=>{
     const {id} = req.params;
     try{
-        const patient = await Patient.findById(id)
+        const patient = await Patient.findById(id).populate('medicalRecord.doctorAssigned')
         if(!patient){
            return res.status(404).json({message: "Patient not found"})
         }

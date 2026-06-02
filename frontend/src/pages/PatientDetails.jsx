@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useParams } from "react-router-dom"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { useForm } from "react-hook-form"
 
 import { showOnePatientAPI, editPatientAPI, deletePatientAPI } from "../services/patientService"
@@ -241,7 +241,11 @@ export default function PatientDetails() {
                     <p>Age: {patient?.patientInfo?.age}</p>
                     <p>Gender: {patient?.patientInfo?.gender}</p>
                     <p>Phone: {patient?.patientInfo?.phone}</p>
-                    <p>Doctor Assigned: {patient?.medicalRecord?.doctorAssigned}</p>
+                        <p>Doctor Assigned:
+                            <Link to={`/doctor/${patient?.medicalRecord?.doctorAssigned?._id}`}>
+                                 {patient?.medicalRecord?.doctorAssigned?.name}
+                            </Link>
+                        </p>
                     <p>Disease: {patient?.medicalRecord?.disease}</p>
                     <p>Treatment: {patient?.medicalRecord?.treatment}</p>
                     <p>Admission Date: {
