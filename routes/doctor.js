@@ -3,13 +3,13 @@ const express = require('express')
 
 const router = express.Router()
 const {addDoctor,getDoctors,showDoctor, editDoctor, deleteDoctor} = require('../controllers/doctor')
-const {authMiddleware, validateDoc} = require('../middleware')
+const {authMiddleware, authorizeRoles, validateDoc} = require('../middleware')
 
-router.post('/add', authMiddleware, validateDoc, addDoctor)
+router.post('/add', authMiddleware, authorizeRoles('admin'), validateDoc, addDoctor)
 router.get('/get', authMiddleware, getDoctors)
 
-router.put('/:id/edit',authMiddleware, validateDoc, editDoctor)
-router.delete('/:id/delete', authMiddleware, deleteDoctor)
+router.put('/:id/edit',authMiddleware, authorizeRoles('admin'), validateDoc, editDoctor)
+router.delete('/:id/delete', authMiddleware, authorizeRoles('admin'), deleteDoctor)
 router.get('/:id', authMiddleware, showDoctor)
 
 

@@ -19,6 +19,17 @@ module.exports.authMiddleware = (req,res,next)=>{
     }
 }
 
+module.exports.authorizeRoles = (...roles)=>{
+    return (req,res,next)=>{
+        if(!roles.includes(req.user.role)){
+            return res.status(403).json({
+                message: 'Access denied'
+            })
+        }
+        next()
+    }
+}
+
 module.exports.validateDoc = (req, res, next) => {
 
     const { error, value } = docSchema.validate(req.body);
