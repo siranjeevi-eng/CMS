@@ -16,6 +16,7 @@ export default function useUser(){
             alert("User added")
 
             localStorage.setItem("token", response.data.token)
+            localStorage.setItem("role", response.data.user.role)
 
             navigate("/dashboard")
 
@@ -29,12 +30,14 @@ export default function useUser(){
     async function LoginUser(data){
         try{
             const response = await loginUser(data)
-            
+
             if(response.data.token){
-            
             localStorage.setItem("token", response.data.token)
+            localStorage.setItem("role", response.data.user.role)
+
             alert("Logged In")
             navigate("/dashboard")
+
             }
             else{
                 alert(response.data)
@@ -49,6 +52,7 @@ export default function useUser(){
 
     function logout(){
         localStorage.removeItem('token')
+        localStorage.removeItem('role')
         navigate("/login")
     }
 

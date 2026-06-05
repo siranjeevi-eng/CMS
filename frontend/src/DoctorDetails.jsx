@@ -8,6 +8,9 @@ import { useForm } from "react-hook-form"
 export default function DoctorDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  const role = localStorage.getItem("role")
+
   const {
     handleSubmit,
     register,
@@ -145,8 +148,12 @@ export default function DoctorDetails() {
             <li>{doc?.experience}</li>
           </ul>
 
-          <button onClick={handleEdit}>Edit</button>
-          <button onClick={() => handleDelete(id)}>Delete</button>
+            {role === 'admin' && (
+              <>
+              <button onClick={handleEdit}>Edit</button>
+              <button onClick={() => handleDelete(id)}>Delete</button>
+              </>)
+          }
         </>
       )}
     </div>

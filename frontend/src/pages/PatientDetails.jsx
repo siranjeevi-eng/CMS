@@ -10,6 +10,8 @@ export default function PatientDetails() {
     const { id } = useParams()
     const navigate = useNavigate()
 
+    const role = localStorage.getItem("role")
+
     const [patient, setPatient] = useState()
     const [isEditing, setIsEditing] = useState(false)
     const [error, setError] = useState("")
@@ -254,7 +256,8 @@ export default function PatientDetails() {
                         }</p>
 
                     <button onClick = {handleEdit}>Edit</button>
-                    <button onClick={() => { handleDelete(id) }}>Delete</button>
+                    
+                    {role === 'admin' && (<button onClick={() => { handleDelete(id) }}>Delete</button>)}
             </>
         )}
        </>

@@ -4,6 +4,9 @@ import { Link } from "react-router-dom"
 
 export default function Dashboard({logout, usr, addDoctor, showDoctor, docErr}){
     
+    const role = localStorage.getItem("role")
+  
+
     const {
         register, 
         handleSubmit, 
@@ -30,58 +33,59 @@ export default function Dashboard({logout, usr, addDoctor, showDoctor, docErr}){
 
         <button onClick={logout}>Logout</button>
             {docErr && <p>{docErr}</p>}  
-        <form onSubmit={handleSubmit(onSubmit)}>
-             <input
-                id="name"
-                type="text"
-                placeholder="Enter Doctor name"
+            {role === "admin" && (
+                <form onSubmit={handleSubmit(onSubmit)}>
+                <input
+                    id="name"
+                    type="text"
+                    placeholder="Enter Doctor name"
 
-                {...register("name",{
-                required:"Doctor name is required"
-                })}
+                    {...register("name", {
+                        required: "Doctor name is required"
+                    })}
                 />
 
-                {errors.name && 
-                <p>{errors.email.message}</p>}
+                {errors.name &&
+                    <p>{errors.email.message}</p>}
 
-              <input 
-                id="email"
-                type="email"
-                placeholder="Enter Doctor's email"
-                
-                {...register("email",{
-                    required:"Doctor's email is required"
-                })}
-              />      
-              {errors.email && <p>{errors.email.message}</p>}
+                <input
+                    id="email"
+                    type="email"
+                    placeholder="Enter Doctor's email"
 
-              <input 
-                id="specialization"
-                type="text"
-                placeholder="Enter the specialization"
+                    {...register("email", {
+                        required: "Doctor's email is required"
+                    })}
+                />
+                {errors.email && <p>{errors.email.message}</p>}
 
-                {...register("specialization",{
-                    required:"Specialization is required"
-                })}
-              />  
-              {errors.specialization && 
-              <p>
-                {errors.specialization.message}
-              </p>}
+                <input
+                    id="specialization"
+                    type="text"
+                    placeholder="Enter the specialization"
 
-              <input 
-                id="experience"
-                type="number"
-                placeholder="Experience"
-                min={0}
-                {...register("experience",{
-                    required:"Experience is required"
-                })}
-              />
+                    {...register("specialization", {
+                        required: "Specialization is required"
+                    })}
+                />
+                {errors.specialization &&
+                    <p>
+                        {errors.specialization.message}
+                    </p>}
+
+                <input
+                    id="experience"
+                    type="number"
+                    placeholder="Experience"
+                    min={0}
+                    {...register("experience", {
+                        required: "Experience is required"
+                    })}
+                />
 
 
                 <button type="submit">Add</button>
-        </form>
+            </form>)} 
 
         </>
     )
