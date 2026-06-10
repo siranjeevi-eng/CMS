@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form"
 import { Link } from "react-router-dom"
 
 
-export default function Dashboard({logout, usr, addDoctor, showDoctor, docErr}){
+export default function Dashboard({ doctor, addDoctor, docErr}){
     
     const role = localStorage.getItem("role")
   
@@ -17,28 +17,48 @@ export default function Dashboard({logout, usr, addDoctor, showDoctor, docErr}){
             addDoctor(data)
         }
     return(
-        <>
-        <h2>Dashboard</h2>
-            <Link to="/patients">
-                View Patients
-            </Link>
-            <h3>All Doctors:</h3>
-        {usr.map((u)=>(
-            <li key={u._id}>
-                <Link to={`/doctor/${u._id}`}>
-                    {u.name}
-                </Link>
-            </li>
-        ))}
+        
+      <> 
+            <div className="max-w-7xl mx-auto px-6 py-8">
+                <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
 
-        <button onClick={logout}>Logout</button>
-            {docErr && <p>{docErr}</p>}  
+                <div className="grid lg:grid-cols-3 gap-8">
+                   
+                    <div className="lg:col-span-2">
+                        <h2 className="text-xl font-semibold mb-4">Doctors</h2>
+                            <div className="grid md:grid-cols-2 mb-4 gap-4">
+                            {doctor.map((d)=>(  
+                                <div key={d._id} className="bg-white p-3 rounded-lg shadow mb-4 hover:shadow-lg transition">  
+                                <Link
+                                    
+                                        to={`/doctor/${d._id}`}
+                                        className="text-black-600 hover:text-gray-500"
+                                    >
+                                        <div>
+                                            <h3 className="text-l font-semibold mb-3">
+                                                Dr. {d.name}
+                                            </h3>
+                                        </div>
+                                    </Link>
+                                </div>
+                            ))}
+                            </div>
+                    </div>
+                    {docErr && (
+                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
+                            {docErr}
+                        </div>
+                    )}  
             {role === "admin" && (
-                <form onSubmit={handleSubmit(onSubmit)}>
+                <form onSubmit={handleSubmit(onSubmit)}
+                className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-md space-y-4 mt-8"
+                >
+                    <h2 className="text-xl font-semibold mb-4">Add Doctor</h2>
                 <input
                     id="name"
                     type="text"
                     placeholder="Enter Doctor name"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 
                     {...register("name", {
                         required: "Doctor name is required"
@@ -46,30 +66,35 @@ export default function Dashboard({logout, usr, addDoctor, showDoctor, docErr}){
                 />
 
                 {errors.name &&
-                    <p>{errors.email.message}</p>}
+                        <p className="text-red-500 text-sm">
+                            {errors.name.message}
+                        </p>}
 
                 <input
                     id="email"
                     type="email"
                     placeholder="Enter Doctor's email"
-
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     {...register("email", {
                         required: "Doctor's email is required"
                     })}
                 />
-                {errors.email && <p>{errors.email.message}</p>}
+                {errors.email && 
+                <p className="text-red-500 text-sm">
+                    {errors.email.message}
+                </p>}
 
                 <input
                     id="specialization"
                     type="text"
                     placeholder="Enter the specialization"
-
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     {...register("specialization", {
                         required: "Specialization is required"
                     })}
                 />
                 {errors.specialization &&
-                    <p>
+                    <p className="text-red-500 text-sm">
                         {errors.specialization.message}
                     </p>}
 
@@ -77,16 +102,24 @@ export default function Dashboard({logout, usr, addDoctor, showDoctor, docErr}){
                     id="experience"
                     type="number"
                     placeholder="Experience"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min={0}
                     {...register("experience", {
                         required: "Experience is required"
                     })}
                 />
+                    {errors.experience &&
+                        <p className="text-red-500 text-sm">
+                            {errors.experience.message}
+                        </p>}
 
 
-                <button type="submit">Add</button>
+                <button className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition" 
+                type="submit">Add</button>
             </form>)} 
-
+                </div>
+            </div>          
         </>
+        
     )
 }

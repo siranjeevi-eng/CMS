@@ -13,67 +13,71 @@ import ShowPatients from './pages/ShowPatients'
 import PatientDetails from './pages/PatientDetails'
 import AddPatient from './pages/AddPatient'
 import ProtectedRoute from './ProtectedRoute'
+import ProtectedLayout from "./layouts/ProtectedLayout";
 
 import NotFound from './NotFound'
 
 
 function App() {
   const {insertUser, LoginUser,logout, err} = useUser()
-  const  {usr, addDoctor, docErr} = useDocotor()
+  const  {doctor, addDoctor, docErr} = useDocotor()
 
   return (
     <>
     
     <Routes>
-      <Route path="/" element={<Layout/>}>
  
-      <Route index element={<Home/>}/>
+      <Route path = "/" element={<Home/>}/>
 
       <Route path="signup" element={<Signup insertUser={insertUser} err={err}/>}/>
 
       <Route path="login" element={<Login LoginUser={LoginUser}/>}/>
 
 
-    </Route>
-
-    <Route path="/dashboard" element = {<ProtectedRoute>
-      <Dashboard usr = {usr} addDoctor = {addDoctor} docErr = {docErr} logout={logout}/>
-    </ProtectedRoute>}/>
-    <Route
-          path="/doctor/:id"
+        <Route
           element={
             <ProtectedRoute>
-              <DoctorDetails />
+              <ProtectedLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route
+            path="/dashboard"
+            element={
+              <Dashboard
+                doctor={doctor}
+                addDoctor={addDoctor}
+                docErr={docErr}
+              />
+            }
+          />
 
-    <Route 
-          path="/patients" 
-          element={
-          <ProtectedRoute>
-            <ShowPatients/>
-          </ProtectedRoute>
-        }
-      />
-        
-    <Route
-          path="/patient/:id"
-          element={
-            <ProtectedRoute>
-              <PatientDetails />
-            </ProtectedRoute>
-          }
-        />  
+          <Route
+            path="/doctor/:id"
+            element={<DoctorDetails />}
+          />
 
-    <Route
-          path="/patient/add"
-          element={
-            <ProtectedRoute>
-              <AddPatient />
-            </ProtectedRoute>
-          }
-        />  
+          <Route
+            path="/patients"
+            element={<ShowPatients />}
+          />
+
+          <Route
+            path="/patient/:id"
+            element={<PatientDetails 
+            doctor = {doctor}
+            />}
+          />
+
+          <Route
+            path="/patient/add"
+            element={
+            <AddPatient
+            doctor = {doctor} 
+            />}
+          />
+        </Route>
+
         <Route path="*" element={<NotFound />} />
     </Routes>
       

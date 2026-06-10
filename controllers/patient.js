@@ -24,7 +24,7 @@ module.exports.addPatient = async(req,res)=>{
 
 module.exports.getPatients = async(req,res)=>{
     try{
-        const patients = await Patient.find()
+        const patients = await Patient.find().populate('medicalRecord.doctorAssigned')
         res.status(200).json({ patients })
     }
     catch(err){
@@ -54,11 +54,10 @@ module.exports.editPatient = async(req,res)=>{
     const { patientInfo, medicalRecord } = req.body;
     try{
         const patient = await Patient.findByIdAndUpdate(id, {patientInfo,
-             medicalRecord}, {new:true})
+             medicalRecord}, {new:true}).populate('medicalRecord.doctorAssigned')
         if(!patient){
             return res.status(404).json({ message: "Patient not found"})
         }
-        console.log(patient)
         res.status(200).json({ message: "Patient details updated sucessfully", patient })
 
     }catch(err){

@@ -5,12 +5,12 @@ import { getDoctor, AddDoctorAPI } from "../services/docService"
 
 export default function useDocotor(){
     const [docErr,setDocErr] = useState(null)
-    const [usr, setUsr] = useState([])
+    const [doctor, setDoctor] = useState([])
     
     const fetchDoctor = async function (){
             try{
                 const response = await getDoctor()
-                setUsr(response.data.doctors)
+                setDoctor(response.data.doctors)
                 
             }catch(err){
                 setDocErr(err.message)
@@ -35,6 +35,6 @@ export default function useDocotor(){
 
     
 
-    return { docErr, usr, addDoctor}
+    return { docErr, doctor, addDoctor}
 
 }

@@ -43,7 +43,12 @@ export default function DoctorDetails() {
 
   function handleEdit(){
     setIsEditing(true)
-    reset(doc);
+    reset({
+      name: doc.name,
+      email: doc.email,
+      specialization: doc.specialization,
+      experience: doc.experience,
+    });
   }
 
   async function handleDelete(id){
@@ -79,15 +84,21 @@ export default function DoctorDetails() {
   }
 
   return(
-    <div>
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">
+        Doctor Details
+      </h1>
       {isEditing ? (
         // EDIT MODE (full form)
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <h2>Edit Doctor</h2>
+        <form onSubmit={handleSubmit(onSubmit)}
+          className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-md space-y-4 mt-8"
+        >
+          <h2 className="text-xl font-semibold mb-4">Edit Doctor Details</h2>
           <input
             id="name"
             type="text"
             placeholder="Enter Doctor name"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 
             {...register("name", {
               required: "Doctor name is required"
@@ -95,30 +106,35 @@ export default function DoctorDetails() {
           />
 
           {errors.name &&
-            <p>{errors.email.message}</p>}
+            <p className="text-red-500 text-sm">
+              {errors.name.message}
+            </p>}
 
           <input
             id="email"
             type="email"
             placeholder="Enter Doctor's email"
-
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             {...register("email", {
               required: "Doctor's email is required"
             })}
           />
-          {errors.email && <p>{errors.email.message}</p>}
+          {errors.email &&
+            <p className="text-red-500 text-sm">
+              {errors.email.message}
+            </p>}
 
           <input
             id="specialization"
             type="text"
             placeholder="Enter the specialization"
-
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             {...register("specialization", {
               required: "Specialization is required"
             })}
           />
           {errors.specialization &&
-            <p>
+            <p className="text-red-500 text-sm">
               {errors.specialization.message}
             </p>}
 
@@ -126,34 +142,88 @@ export default function DoctorDetails() {
             id="experience"
             type="number"
             placeholder="Experience"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             min={0}
             {...register("experience", {
               required: "Experience is required"
             })}
           />
+          {errors.experience &&
+            <p className="text-red-500 text-sm">
+              {errors.experience.message}
+            </p>}
 
-          <button type="submit">Save</button>
-          <button type="button" onClick={() => setIsEditing(false)}>
+
+          <button type="submit"
+          className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition"
+          >
+            Save
+          </button>
+          <button type="button" onClick={() => setIsEditing(false)}
+          className="w-full bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition"
+            >
             Cancel
           </button>
-        </form>
-      ) : (
+        </form>) : (
         // VIEW MODE
         <>
-          <h2>{doc?.name}</h2>
+            <div className="bg-white rounded-xl px-6  shadow-md p-6">
 
-          <ul>
-            <li>{doc?.specialization}</li>
-            <li>{doc?.email}</li>
-            <li>{doc?.experience}</li>
-          </ul>
+              <h2 className="text-2xl font-semibold mb-6">
+                Dr. {doc?.name}
+              </h2>
+
+              <div className="space-y-4">
+
+                <div>
+                  <p className="text-sm text-gray-500">
+                    Specialization
+                  </p>
+                  <p className="font-medium">
+                    {doc?.specialization}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-500">
+                    Email
+                  </p>
+                  <p className="font-medium">
+                    {doc?.email}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-500">
+                    Experience
+                  </p>
+                  <p className="font-medium">
+                    {doc?.experience} Years
+                  </p>
+                </div>
+
+              </div>
 
             {role === 'admin' && (
-              <>
-              <button onClick={handleEdit}>Edit</button>
-              <button onClick={() => handleDelete(id)}>Delete</button>
-              </>)
-          }
+              <div className="flex gap-3 mt-8">
+
+                <button
+                  onClick={handleEdit}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                >
+                  Edit
+                </button>
+
+                <button
+                  onClick={() => handleDelete(id)}
+                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
+                >
+                  Delete
+                </button>
+
+              </div>
+              )}
+              </div>
         </>
       )}
     </div>

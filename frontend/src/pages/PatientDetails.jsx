@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form"
 
 import { showOnePatientAPI, editPatientAPI, deletePatientAPI } from "../services/patientService"
 
-export default function PatientDetails() {
+export default function PatientDetails({doctor}) {
 
     const { id } = useParams()
     const navigate = useNavigate()
@@ -52,9 +52,16 @@ export default function PatientDetails() {
     function handleEdit(){
         setIsEditing(true)
         reset({
-            patientInfo: patient.patientInfo,
+            patientInfo: {
+                name: patient.patientInfo.name,
+                email: patient.patientInfo.email,
+                phone: patient.patientInfo.phone,
+                age: patient.patientInfo.age,
+                gender: patient.patientInfo.gender
+},
             medicalRecord: {
                 ...patient.medicalRecord,
+                doctorAssigned: patient.medicalRecord.doctorAssigned._id,
 
                 admissionDate:
                     patient.medicalRecord.admissionDate
@@ -105,54 +112,61 @@ export default function PatientDetails() {
     }
     return (
         <>
-        {error && <p>{error}</p>}
+            {error && 
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
+                {error}
+            </div>}
         {isEditing ?(
-            <form onSubmit={handleSubmit(onSubmit)}>
-                    <h2>Edit Patient Details</h2>
+            <form onSubmit={handleSubmit(onSubmit)}
+            className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-md space-y-4 mt-8"
+            >
+
+                    <h1 className="text-xl font-semibold mb-4">Edit Patient Details</h1>
+                   
                     <input
                         id="patientInfo.name"
                         type="text"
                         placeholder="Patient name"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 
                         {...register("patientInfo.name", {
                             required: "Patient name is required"
                         })}
                     />
                     {errors.patientInfo?.name && (
-                        <p>{errors.patientInfo.name.message}</p>
+                        <p className="text-red-500 text-sm">{errors.patientInfo.name.message}</p>
                     )}
                     <input
                         id="patientInfo.email"
                         type="text"
                         placeholder="Patient email"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 
                         {...register("patientInfo.email", {
-                            required: "Patient email is required",
-                            pattern: {
-                                value: /^\S+@\S+\.\S+$/,
-                                message: "Enter a valid email"
-                            }
+                            required: "Patient email is required"
                         })}
                     />
                     {errors.patientInfo?.email && (
-                        <p>{errors.patientInfo.email.message}</p>
+                        <p className="text-red-500 text-sm">{errors.patientInfo.email.message}</p>
                     )}
                     <input
                         id="patientInfo.phone"
                         type="text"
                         placeholder="Patient mobile number"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 
                         {...register("patientInfo.phone", {
                             required: "Patient mobile number is required"
                         })}
                     />
                     {errors.patientInfo?.phone && (
-                        <p>{errors.patientInfo.phone.message}</p>
+                        <p className="text-red-500 text-sm">{errors.patientInfo.phone.message}</p>
                     )}
                     <input
                         id="patientInfo.age"
                         type="number"
                         placeholder="Patient age"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 
                         {...register("patientInfo.age", {
                             required: "Patient age is required",
@@ -163,103 +177,197 @@ export default function PatientDetails() {
                         })}
                     />
                     {errors.patientInfo?.age && (
-                        <p>{errors.patientInfo.age.message}</p>
+                        <p className="text-red-500 text-sm">{errors.patientInfo.age.message}</p>
                     )}
-                    <input
+
+                    <select
                         id="patientInfo.gender"
                         type="text"
                         placeholder="Patient gender"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 
                         {...register("patientInfo.gender", {
                             required: "Patient gender is required"
                         })}
-                    />
+                    >
+                        <option value="">Select Gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </select>
                     {errors.patientInfo?.gender && (
-                        <p>{errors.patientInfo.gender.message}</p>
+                        <p className="text-red-500 text-sm">{errors.patientInfo.gender.message}</p>
                     )}
                     <input
                         id="medicalRecord.disease"
                         type="text"
                         placeholder="Enter disease"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 
                         {...register("medicalRecord.disease", {
                             required: "Patient disease is required"
                         })}
                     />
                     {errors.medicalRecord?.disease && (
-                        <p>{errors.medicalRecord.disease.message}</p>
+                        <p className="text-red-500 text-sm">{errors.medicalRecord.disease.message}</p>
                     )}
 
                     <input
                         id="medicalRecord.treatment"
                         type="text"
                         placeholder="Enter treatment"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 
                         {...register("medicalRecord.treatment", {
                             required: "Patient treatment is required"
                         })}
                     />
                     {errors.medicalRecord?.treatment && (
-                        <p>{errors.medicalRecord.treatment.message}</p>
+                        <p className="text-red-500 text-sm">{errors.medicalRecord.treatment.message}</p>
                     )}
 
-                    <input
-                        id="medicalRecord.doctorAssigned"
-                        type="text"
-                        placeholder="Enter Doctor Assigned"
 
-                        {...register("medicalRecord.doctorAssigned", {
-                            required: "Patient assigned doctor detail is required"
-                        })}
-                    />
+                    <select
+                        {...register("medicalRecord.doctorAssigned")}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    >
+                        {doctor.map((d) => (
+                            <option
+                                key={d._id}
+                                value={d._id}
+                            >
+                                Dr. {d.name}
+                            </option>
+                        ))}
+                    </select>
                     {errors.medicalRecord?.doctorAssigned && (
-                        <p>{errors.medicalRecord.doctorAssigned.message}</p>
+                        <p className="text-red-500 text-sm">{errors.medicalRecord.doctorAssigned.message}</p>
+                    )}
+                    {errors.medicalRecord?.doctorAssigned && (
+                        <p className="text-red-500 text-sm">{errors.medicalRecord.doctorAssigned.message}</p>
                     )}
 
                     <input
                         id="medicalRecord.admissionDate"
                         type="date"
                         placeholder="Enter treatment"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 
                         {...register("medicalRecord.admissionDate", {
                             required: "Patient admission date is required"
                         })}
                     />
                     {errors.medicalRecord?.admissionDate && (
-                        <p>{errors.medicalRecord.admissionDate.message}</p>
+                        <p className="text-red-500 text-sm">{errors.medicalRecord.admissionDate.message}</p>
                     )}
-
-                <button type="submit">Save</button>
-                <button type="button" onClick={()=>{
-                    setIsEditing(false)
-                    setError("")
-                    }}>Cancel</button>
+                    <button 
+                    className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition"
+                    type="submit">Save</button>
+                    <button type="button" onClick={() => {
+                        setIsEditing(false)
+                        setError("")
+                    }}
+                    className="w-full bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition"
+                    >Cancel</button>
+                
             </form>
         ):(
-            <>
-                    <h2>Patient details</h2>
-                    <h3>Name: {patient?.patientInfo?.name}</h3>
-                    <p>Email: {patient?.patientInfo?.email}</p>
-                    <p>Age: {patient?.patientInfo?.age}</p>
-                    <p>Gender: {patient?.patientInfo?.gender}</p>
-                    <p>Phone: {patient?.patientInfo?.phone}</p>
-                        <p>Doctor Assigned:
-                            <Link to={`/doctor/${patient?.medicalRecord?.doctorAssigned?._id}`}>
-                                 {patient?.medicalRecord?.doctorAssigned?.name}
-                            </Link>
-                        </p>
-                    <p>Disease: {patient?.medicalRecord?.disease}</p>
-                    <p>Treatment: {patient?.medicalRecord?.treatment}</p>
-                    <p>Admission Date: {
-                        patient?.medicalRecord?.admissionDate
-                            ?.split("T")[0]
-                        }</p>
+                <div className=" max-w-3xl mx-auto p-6">
+                    <div className="bg-white rounded-xl px-6  shadow-md p-6">
 
-                    <button onClick = {handleEdit}>Edit</button>
-                    
-                    {role === 'admin' && (<button onClick={() => { handleDelete(id) }}>Delete</button>)}
-            </>
+                        <h1 className="text-3xl font-bold mb-6">
+                            Patient Details
+                        </h1>
+
+                        {/* Personal Information */}
+
+                            <h2 className="text-xl font-semibold mb-4">
+                                Personal Information
+                            </h2>
+
+                            <h3 className="text-lg font-medium mb-3">
+                                {patient?.patientInfo?.name}
+                            </h3>
+
+                            <p className="mb-2">
+                                <span className="font-semibold">Email:</span>{" "}
+                                {patient?.patientInfo?.email}
+                            </p>
+
+                            <p className="mb-2">
+                                <span className="font-semibold">Age:</span>{" "}
+                                {patient?.patientInfo?.age}
+                            </p>
+
+                            <p className="mb-2">
+                                <span className="font-semibold">Gender:</span>{" "}
+                                {patient?.patientInfo?.gender}
+                            </p>
+
+                            <p>
+                                <span className="font-semibold">Phone:</span>{" "}
+                                {patient?.patientInfo?.phone}
+                            </p>
+
+
+                        {/* Medical Information */}
+                        <div className="border-t border-gray-200 mt-6 pt-6">
+
+                            <h2 className="text-xl font-semibold mb-4">
+                                Medical Information
+                            </h2>
+
+                            <p className="mb-2">
+                                <span className="font-semibold">Doctor Assigned:</span>{" "}
+                                <Link
+                                    to={`/doctor/${patient?.medicalRecord?.doctorAssigned?._id}`}
+                                    className="text-blue-600 hover:text-blue-800 hover:underline"
+                                >
+                                    {patient?.medicalRecord?.doctorAssigned?.name}
+                                </Link>
+                            </p>
+
+                            <p className="mb-2">
+                                <span className="font-semibold">Disease:</span>{" "}
+                                {patient?.medicalRecord?.disease}
+                            </p>
+
+                            <p className="mb-2">
+                                <span className="font-semibold">Treatment:</span>{" "}
+                                {patient?.medicalRecord?.treatment}
+                            </p>
+
+                            <p>
+                                <span className="font-semibold">Admission Date:</span>{" "}
+                                {patient?.medicalRecord?.admissionDate?.split("T")[0]}
+                            </p>
+
+                            <div className="flex gap-3 mt-6">
+
+                                <button
+                                    onClick={handleEdit}
+                                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                                >
+                                    Edit
+                                </button>
+
+                                {role === "admin" && (
+                                    <button
+                                        onClick={() => handleDelete(id)}
+                                        className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
+                                    >
+                                        Delete
+                                    </button>
+                                )}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                    </div>
         )}
-       </>
+        
+       </>  
     )
 }
