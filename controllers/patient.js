@@ -24,7 +24,9 @@ module.exports.addPatient = async(req,res)=>{
 
 module.exports.getPatients = async(req,res)=>{
     try{
-        const patients = await Patient.find().populate('medicalRecord.doctorAssigned')
+        const search = req.query.search || '';
+
+        const patients = await Patient.find({"patientInfo.name":{$regex:search, $options:'i'}}).populate('medicalRecord.doctorAssigned')
         res.status(200).json({ patients })
     }
     catch(err){
