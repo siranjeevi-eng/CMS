@@ -63,7 +63,7 @@ function App() {
           />
 
           <Route
-            path="/patient/:id"
+            path="/patient/:patientId"
             element={<PatientDetails 
             doctor = {doctor}
             />}

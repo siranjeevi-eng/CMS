@@ -4,10 +4,11 @@ import { useNavigate, Link } from "react-router-dom"
 import { useForm } from "react-hook-form"
 
 import { showOnePatientAPI, editPatientAPI, deletePatientAPI } from "../services/patientService"
+import { addNotesAPI, getNotesAPI } from "../services/noteService"
 
 export default function PatientDetails({doctor}) {
 
-    const { id } = useParams()
+    const { patientId } = useParams()
     const navigate = useNavigate()
 
     const role = localStorage.getItem("role")
@@ -16,6 +17,8 @@ export default function PatientDetails({doctor}) {
     const [isEditing, setIsEditing] = useState(false)
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(true)
+    const [content, setContent] = useState("")
+    const [note, setNote] = useState([])
     const {
         handleSubmit,
         register,
@@ -30,7 +33,7 @@ export default function PatientDetails({doctor}) {
 
             try {
 
-                const res = await showOnePatientAPI(id)
+                const res = await showOnePatientAPI(patientId)
                 setPatient(res.data.patient)
                 setError("")
 
@@ -45,7 +48,7 @@ export default function PatientDetails({doctor}) {
         }
 
         fetchPatient()
-    }, [id])
+    }, [patientId])
 
     //handleEdit
 
@@ -72,7 +75,7 @@ export default function PatientDetails({doctor}) {
 
     async function onSubmit(data){
         try{
-            const res = await editPatientAPI(id, data)
+            const res = await editPatientAPI(patientId, data)
             setPatient(res.data.patient)
             setIsEditing(false)
             setError("")
@@ -85,7 +88,7 @@ export default function PatientDetails({doctor}) {
     
       }
       
-       async function handleDelete(id) {
+       async function handleDelete(patientId) {
        const confirmed = window.confirm(
                "Are you sure you want to delete this patient?"
            )
@@ -95,7 +98,7 @@ export default function PatientDetails({doctor}) {
             return
         }
                 try{
-                  await deletePatientAPI(id)
+                  await deletePatientAPI(patientId)
                   alert('Patient data has been deleted successfully')
                   navigate('/patients')
                 
@@ -106,6 +109,35 @@ export default function PatientDetails({doctor}) {
         }
            
       }
+
+      async function noteSubmit(content){
+        try{
+            await addNotesAPI(content, patientId)
+            reset()
+        }catch(err){
+            console.error("Failed to add notes:", err);
+            setError(err.response?.data?.message)
+        }
+      }
+
+      useEffect(()=>{
+        async function fetchNotes() {
+            try{
+                const notes = await getNotesAPI(patientId)
+                console.log(notes)
+                setNote(notes.data)
+            }
+            catch(err){
+                console.error("Failed to load notes:", err);
+                setError(err.response?.data?.message)
+
+            }
+        }
+        fetchNotes()
+      }, [])
+
+      
+
 
     if (loading) {
         return <p>Loading patient details...</p>
@@ -272,77 +304,81 @@ export default function PatientDetails({doctor}) {
                 
             </form>
         ):(
-                <div className=" max-w-3xl mx-auto p-6">
-                    <div className="bg-white rounded-xl px-6  shadow-md p-6">
+                    <div className="max-w-5xl mx-auto p-6">
+                        <div className="bg-white rounded-xl shadow-md p-6">
 
-                        <h1 className="text-3xl font-bold mb-6">
-                            Patient Details
-                        </h1>
+                            <h1 className="text-3xl font-bold mb-8">
+                                Patient Details
+                            </h1>
 
-                        {/* Personal Information */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
 
-                            <h2 className="text-xl font-semibold mb-4">
-                                Personal Information
-                            </h2>
+                                {/* Personal Information */}
+                                <div>
+                                    <h2 className="text-xl font-semibold mb-4">
+                                        Personal Information
+                                    </h2>
 
-                            <h3 className="text-lg font-medium mb-3">
-                                {patient?.patientInfo?.name}
-                            </h3>
+                                    <h3 className="text-lg font-medium mb-3">
+                                        {patient?.patientInfo?.name}
+                                    </h3>
 
-                            <p className="mb-2">
-                                <span className="font-semibold">Email:</span>{" "}
-                                {patient?.patientInfo?.email}
-                            </p>
+                                    <p className="mb-2">
+                                        <span className="font-semibold">Email:</span>{" "}
+                                        {patient?.patientInfo?.email}
+                                    </p>
 
-                            <p className="mb-2">
-                                <span className="font-semibold">Age:</span>{" "}
-                                {patient?.patientInfo?.age}
-                            </p>
+                                    <p className="mb-2">
+                                        <span className="font-semibold">Age:</span>{" "}
+                                        {patient?.patientInfo?.age}
+                                    </p>
 
-                            <p className="mb-2">
-                                <span className="font-semibold">Gender:</span>{" "}
-                                {patient?.patientInfo?.gender}
-                            </p>
+                                    <p className="mb-2">
+                                        <span className="font-semibold">Gender:</span>{" "}
+                                        {patient?.patientInfo?.gender}
+                                    </p>
 
-                            <p>
-                                <span className="font-semibold">Phone:</span>{" "}
-                                {patient?.patientInfo?.phone}
-                            </p>
+                                    <p>
+                                        <span className="font-semibold">Phone:</span>{" "}
+                                        {patient?.patientInfo?.phone}
+                                    </p>
+                                </div>
 
+                                {/* Medical Information */}
+                                <div>
+                                    <h2 className="text-xl font-semibold mb-4">
+                                        Medical Information
+                                    </h2>
 
-                        {/* Medical Information */}
-                        <div className="border-t border-gray-200 mt-6 pt-6">
+                                    <p className="mb-2">
+                                        <span className="font-semibold">Doctor Assigned:</span>{" "}
+                                        <Link
+                                            to={`/doctor/${patient?.medicalRecord?.doctorAssigned?._id}`}
+                                            className="text-blue-600 hover:text-blue-800 hover:underline"
+                                        >
+                                            {patient?.medicalRecord?.doctorAssigned?.name}
+                                        </Link>
+                                    </p>
 
-                            <h2 className="text-xl font-semibold mb-4">
-                                Medical Information
-                            </h2>
+                                    <p className="mb-2">
+                                        <span className="font-semibold">Disease:</span>{" "}
+                                        {patient?.medicalRecord?.disease}
+                                    </p>
 
-                            <p className="mb-2">
-                                <span className="font-semibold">Doctor Assigned:</span>{" "}
-                                <Link
-                                    to={`/doctor/${patient?.medicalRecord?.doctorAssigned?._id}`}
-                                    className="text-blue-600 hover:text-blue-800 hover:underline"
-                                >
-                                    {patient?.medicalRecord?.doctorAssigned?.name}
-                                </Link>
-                            </p>
+                                    <p className="mb-2">
+                                        <span className="font-semibold">Treatment:</span>{" "}
+                                        {patient?.medicalRecord?.treatment}
+                                    </p>
 
-                            <p className="mb-2">
-                                <span className="font-semibold">Disease:</span>{" "}
-                                {patient?.medicalRecord?.disease}
-                            </p>
+                                    <p>
+                                        <span className="font-semibold">Admission Date:</span>{" "}
+                                        {patient?.medicalRecord?.admissionDate?.split("T")[0]}
+                                    </p>
+                                </div>
 
-                            <p className="mb-2">
-                                <span className="font-semibold">Treatment:</span>{" "}
-                                {patient?.medicalRecord?.treatment}
-                            </p>
+                            </div>
 
-                            <p>
-                                <span className="font-semibold">Admission Date:</span>{" "}
-                                {patient?.medicalRecord?.admissionDate?.split("T")[0]}
-                            </p>
-
-                            <div className="flex gap-3 mt-6">
+                            <div className="flex gap-3 mt-8 pt-6 border-t border-gray-200">
 
                                 <button
                                     onClick={handleEdit}
@@ -363,11 +399,75 @@ export default function PatientDetails({doctor}) {
                             </div>
 
                         </div>
-
-                    </div>
                     </div>
         )}
-        
+
+            <div className="text-l mb-4">
+
+                <div className="bg-white rounded-xl p-6 mt-6">
+                    <form
+                        onSubmit={handleSubmit(noteSubmit)}
+                        className="mb-6"
+                    >
+                        <textarea
+                            rows="1"
+                            placeholder="Add a clinical note..."
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            {...register("content", {
+                                required: "Note content is required"
+                            })}
+                        />
+
+                        {errors.content && (
+                            <p className="text-red-500 text-sm mt-1">
+                                {errors.content.message}
+                            </p>
+                        )}
+
+                        <div className="mt-3 flex justify-end">
+                            <button
+                                type="submit"
+                                className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition"
+                            >
+                                Add Note
+                            </button>
+                        </div>
+                    </form>
+
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-4">Clinical Notes </h2>
+                    {(note.length === 0) && (
+                        <p className="text-center text-gray-500 py-8 italic">
+                            No clinical notes available.
+                        </p>)
+                        }
+                    {note.map((n) => (
+                        <div
+                            key={n._id}
+                            className="border-b border-gray-300 py-6 last:border-b-0"
+                        >
+                            <div className="flex justify-between items-center mb-2">
+                                <h3 className="font-semibold text-gray-800">
+                                    Dr. {n.author.name}
+                                </h3>
+
+                                <span className="text-sm text-gray-500">
+                                    {new Date(n.createdAt).toLocaleString('en-IN', {
+                                        day: '2-digit',
+                                        month: 'short',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}
+                                </span>
+                            </div>
+
+                            <p className="text-gray-700 whitespace-pre-wrap">
+                                {n.content}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+                           </div>
+
        </>  
-    )
-}
+    )}

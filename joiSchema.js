@@ -45,3 +45,7 @@ module.exports.patientSchema = Joi.object({
         doctorAssigned: Joi.string().trim().required().escapeHTML()
     }).required().unknown(false)
 })
+
+module.exports.noteSchema = Joi.object({
+    content: Joi.string().trim().min(10).required().escapeHTML()
+}).required().unknown(false);

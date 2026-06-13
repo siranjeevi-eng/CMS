@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken')
-const { docSchema, patientSchema } = require('./joiSchema')
+const { docSchema, patientSchema, noteSchema } = require('./joiSchema')
 const ExpressError = require('./utils/ExpressError')
 
 module.exports.authMiddleware = (req,res,next)=>{
@@ -52,3 +52,14 @@ module.exports.validatePatient = (req, res, next) => {
     req.body = value;
     next();
 };
+
+module.exports.validateNote = (req,res,next)=>{
+    const {error, value} = noteSchema.validate(req.body);
+
+    if(error){
+        const msg = error.details.map(el => el.message).join(', ');
+        return next (new ExpressError(msg, 400))
+    }
+    req.body = value;
+    next();
+}
