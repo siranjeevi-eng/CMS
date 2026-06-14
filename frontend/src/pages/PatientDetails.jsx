@@ -4,7 +4,7 @@ import { useNavigate, Link } from "react-router-dom"
 import { useForm } from "react-hook-form"
 
 import { showOnePatientAPI, editPatientAPI, deletePatientAPI } from "../services/patientService"
-import { addNotesAPI, getNotesAPI } from "../services/noteService"
+import { addNotesAPI, getNotesAPI, editNoteAPI } from "../services/noteService"
 
 export default function PatientDetails({doctor}) {
 
@@ -15,6 +15,8 @@ export default function PatientDetails({doctor}) {
 
     const [patient, setPatient] = useState()
     const [isEditing, setIsEditing] = useState(false)
+    const [editingNoteId, setEditingNoteId] = useState(null);
+    const [editedContent, setEditedContent] = useState("")
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(true)
     const [content, setContent] = useState("")
@@ -112,7 +114,9 @@ export default function PatientDetails({doctor}) {
 
       async function noteSubmit(content){
         try{
-            await addNotesAPI(content, patientId)
+            const newNote = await addNotesAPI(content, patientId)
+            fetchNotes()
+            
             reset()
         }catch(err){
             console.error("Failed to add notes:", err);
@@ -121,22 +125,41 @@ export default function PatientDetails({doctor}) {
       }
 
       useEffect(()=>{
-        async function fetchNotes() {
-            try{
-                const notes = await getNotesAPI(patientId)
-                console.log(notes)
-                setNote(notes.data)
-            }
-            catch(err){
-                console.error("Failed to load notes:", err);
-                setError(err.response?.data?.message)
-
-            }
-        }
         fetchNotes()
       }, [])
 
+    async function fetchNotes() {
+        try {
+            const notes = await getNotesAPI(patientId)
+            console.log(notes)
+            setNote(notes.data)
+        }
+        catch (err) {
+            console.error("Failed to load notes:", err);
+            setError(err.response?.data?.message)
+
+        }
+    }
+
+      async function handleNoteEdit(note) {
+          setEditingNoteId(note._id);
+          setEditedContent(note.content);
+      }
       
+      async function handleNoteSave(noteId) {
+        try{
+
+            await editNoteAPI({content:editedContent}, patientId, noteId)
+            setEditedContent("")
+            setEditingNoteId(null)
+            fetchNotes()
+        }
+        catch(err){
+            console.error("Failed to update note:", err);
+            setError(err.response?.data?.message)
+
+        }
+      }
 
 
     if (loading) {
@@ -382,7 +405,7 @@ export default function PatientDetails({doctor}) {
 
                                 <button
                                     onClick={handleEdit}
-                                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition cursor-pointer"
                                 >
                                     Edit
                                 </button>
@@ -403,8 +426,8 @@ export default function PatientDetails({doctor}) {
         )}
 
             <div className="text-l mb-4">
-
                 <div className="bg-white rounded-xl p-6 mt-6">
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-4">Clinical Notes </h2>
                     <form
                         onSubmit={handleSubmit(noteSubmit)}
                         className="mb-6"
@@ -427,45 +450,87 @@ export default function PatientDetails({doctor}) {
                         <div className="mt-3 flex justify-end">
                             <button
                                 type="submit"
-                                className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition"
+                                className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition cursor-pointer"
                             >
                                 Add Note
                             </button>
                         </div>
+
+                      
                     </form>
 
-                    <h2 className="text-2xl font-semibold text-gray-800 mb-4">Clinical Notes </h2>
                     {(note.length === 0) && (
                         <p className="text-center text-gray-500 py-8 italic">
                             No clinical notes available.
                         </p>)
-                        }
-                    {note.map((n) => (
-                        <div
-                            key={n._id}
-                            className="border-b border-gray-300 py-6 last:border-b-0"
-                        >
-                            <div className="flex justify-between items-center mb-2">
-                                <h3 className="font-semibold text-gray-800">
-                                    Dr. {n.author.name}
-                                </h3>
+                    }
+                       
+                        {note.map((n) => (
+                            <div
+                                key={n._id}
+                                className="border-b border-gray-300 py-6 last:border-b-0"
+                            >
+                                <div className="flex justify-between items-center mb-2">
+                                    <h3 className="font-semibold text-gray-800">
+                                        Dr. {n.author.name}
+                                    </h3>
 
-                                <span className="text-sm text-gray-500">
-                                    {new Date(n.createdAt).toLocaleString('en-IN', {
-                                        day: '2-digit',
-                                        month: 'short',
-                                        year: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                    })}
-                                </span>
-                            </div>
+                                    <span className="text-sm text-gray-500">
+                                        {new Date(n.createdAt).toLocaleString('en-IN', {
+                                            day: '2-digit',
+                                            month: 'short',
+                                            year: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}
+                                    </span>
+                                </div>
+                            { editingNoteId === n._id ? (
+                                
+                                    <div className="space-y-3">
+                                        <textarea
+                                            rows="1"
+                                            value={editedContent}
+                                            onChange={(e)=> setEditedContent(e.target.value)}
+                                            placeholder="Add a clinical note..."
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                          
+                                        />
 
-                            <p className="text-gray-700 whitespace-pre-wrap">
-                                {n.content}
-                            </p>
-                        </div>
-                    ))}
+
+                                        <button type="button"
+                                            className="text-sm text-blue-600 hover:text-blue-800 p-1 hover:underline cursor-pointer"
+                                            onClick={()=> handleNoteSave(n._id)}>
+                                            Save
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setEditingNoteId(null);
+                                                setEditedContent("");
+                                            }}
+                                            className="text-sm text-gray-600 hover:text-gray-800 p-1 hover:underline cursor-pointer"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                        
+                                ) : (
+
+                                  <>
+                                    <p className="text-gray-700 whitespace-pre-wrap">
+                                       {n.content}
+                                    </p>    
+                                    <button 
+                                        type="button"
+                                        className="text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                                        onClick={() => handleNoteEdit(n)}>edit</button>
+                                    </>)}
+                              
+                                </div>
+                            ))
+}
+                 
                 </div>
                            </div>
 

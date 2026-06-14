@@ -24,3 +24,20 @@ module.exports.getNote = async(req,res)=>{
     }
 
 } 
+
+module.exports.editNote = async(req,res)=>{
+    const {noteId} = req.params;
+    const {content} = req.body;
+
+    try{
+        const note = await Notes.findByIdAndUpdate(noteId,{content},{new: true})
+        if(!note){
+           return res.status(404).json({message: 'Note not found'})
+        }
+
+        res.status(200).json({ message: 'Note updated sucessfully', note })
+    }
+    catch(err){
+        res.status(500).json({message: 'Internal server error', error:err.message})
+    }
+}

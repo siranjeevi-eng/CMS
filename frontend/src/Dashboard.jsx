@@ -43,7 +43,7 @@ export default function Dashboard({ doctor, addDoctor, docErr}){
                         <h2 className="text-xl font-semibold mb-4">Doctors</h2>
                         <div className="grid md:grid-cols-2 mb-4 gap-4">
                             {filterDoctor.map((d) => (
-                                <div key={d._id} className="bg-white p-3 rounded-lg shadow mb-4 hover:shadow-lg transition">
+                                <div key={d._id} className="bg-white p-3 rounded-lg shadow mb-4 hover:shadow-lg transition cursor-pointer">
                                     <Link
 
                                         to={`/doctor/${d._id}`}
