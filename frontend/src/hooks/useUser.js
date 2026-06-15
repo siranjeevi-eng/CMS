@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { addUser, loginUser } from "../services/authService";
 
 
 export default function useUser(){
-    const [err, setErr] = useState(null)
     const [user, setUser] = useState([])
     const navigate = useNavigate()
 
@@ -13,7 +13,7 @@ export default function useUser(){
             const response = await addUser(data)
             setUser(prev => [...prev, response.data])
 
-            alert("User added")
+            toast.success("User added successfully");
 
             localStorage.setItem("token", response.data.token)
             localStorage.setItem("role", response.data.user.role)
@@ -22,8 +22,9 @@ export default function useUser(){
 
         }catch(err){
             console.error(err.message)
-            setErr(err.response?.data?.message ||
-                "Something went wrong")
+            toast.error(
+                err.response?.data?.message || "Something went wrong"
+            );
             
         }
     }
@@ -34,8 +35,7 @@ export default function useUser(){
             if(response.data.token){
             localStorage.setItem("token", response.data.token)
             localStorage.setItem("role", response.data.user.role)
-
-            alert("Logged In")
+            toast.success("Logged In");
             navigate("/dashboard")
 
             }
@@ -45,8 +45,10 @@ export default function useUser(){
         }
 
         catch(err){
-            setErr(err.message)
-            alert('Invalid credentials')
+            console.error("Logged in failed", err.response.data.message)
+            toast.error(
+                err.response?.data?.message || "Something went wrong"
+            );
         }
     }
 

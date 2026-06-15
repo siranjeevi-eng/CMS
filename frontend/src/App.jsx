@@ -1,6 +1,7 @@
 import './App.css'
 import './index.css'
 import {Routes,Route} from 'react-router-dom'
+import { Toaster } from "react-hot-toast";
 import Signup from './Signup'
 import Login from './Login'
 import Home from './Home'
@@ -24,7 +25,17 @@ function App() {
 
   return (
     <>
-    
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          success: {
+            className: "bg-green-50 border border-green-500 text-green-700",
+          },
+          error: {
+            className: "bg-red-50 border border-red-500 text-red-700",
+          },
+        }}
+      />
     <Routes>
  
       <Route path = "/" element={<Home/>}/>

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { useParams } from "react-router-dom"
 import { useNavigate, Link } from "react-router-dom"
 import { useForm } from "react-hook-form"
+import toast from "react-hot-toast";
 
 import { showOnePatientAPI, editPatientAPI, deletePatientAPI } from "../services/patientService"
 import { addNotesAPI, getNotesAPI, editNoteAPI } from "../services/noteService"
@@ -17,16 +18,24 @@ export default function PatientDetails({doctor}) {
     const [isEditing, setIsEditing] = useState(false)
     const [editingNoteId, setEditingNoteId] = useState(null);
     const [editedContent, setEditedContent] = useState("")
-    const [error, setError] = useState("")
     const [loading, setLoading] = useState(true)
     const [content, setContent] = useState("")
     const [note, setNote] = useState([])
+    const patientForm = useForm()
+    const noteForm = useForm()
     const {
         handleSubmit,
         register,
         reset,
         formState: { errors }
-    } = useForm()
+    } = patientForm
+
+    const {
+        handleSubmit: noteHandleSubmit,
+        register: noteRegister,
+        reset: noteReset,
+        formState: { errors: noteErrors }
+    } = noteForm
 
 
     useEffect(() => {
@@ -37,12 +46,13 @@ export default function PatientDetails({doctor}) {
 
                 const res = await showOnePatientAPI(patientId)
                 setPatient(res.data.patient)
-                setError("")
 
             }
             catch (err) {
                 console.error("Failed to fetch patient:", err);
-                setError(err.response?.data?.message)
+                toast.error(
+                    err.response?.data?.message || "Something went wrong"
+                );
             }
             finally{
                 setLoading(false)
@@ -80,12 +90,14 @@ export default function PatientDetails({doctor}) {
             const res = await editPatientAPI(patientId, data)
             setPatient(res.data.patient)
             setIsEditing(false)
-            setError("")
+            toast.success("Patient details updated successfully");
     
             
         }catch(err){
             console.error("Failed to update the patient:", err);
-            setError(err.response?.data?.message)
+            toast.error(
+                error.response?.data?.message || "Something went wrong"
+            );
         }
     
       }
@@ -102,12 +114,15 @@ export default function PatientDetails({doctor}) {
                 try{
                   await deletePatientAPI(patientId)
                   alert('Patient data has been deleted successfully')
+                  toast.success("Patient deleted successfully");
                   navigate('/patients')
                 
             }
                 catch(err){
                 console.error("Failed to delete patient:", err);
-                setError(err.response?.data?.message)
+                    toast.error(
+                        error.response?.data?.message || "Something went wrong"
+                    );
         }
            
       }
@@ -116,11 +131,12 @@ export default function PatientDetails({doctor}) {
         try{
             const newNote = await addNotesAPI(content, patientId)
             fetchNotes()
-            
-            reset()
+            noteReset()
         }catch(err){
             console.error("Failed to add notes:", err);
-            setError(err.response?.data?.message)
+            toast.error(
+                error.response?.data?.message || "Something went wrong"
+            );    
         }
       }
 
@@ -131,12 +147,13 @@ export default function PatientDetails({doctor}) {
     async function fetchNotes() {
         try {
             const notes = await getNotesAPI(patientId)
-            console.log(notes)
             setNote(notes.data)
         }
         catch (err) {
             console.error("Failed to load notes:", err);
-            setError(err.response?.data?.message)
+            toast.error(
+                error.response?.data?.message || "Something went wrong"
+            );
 
         }
     }
@@ -152,11 +169,14 @@ export default function PatientDetails({doctor}) {
             await editNoteAPI({content:editedContent}, patientId, noteId)
             setEditedContent("")
             setEditingNoteId(null)
+            toast.success("Note updated successfully");
             fetchNotes()
         }
         catch(err){
             console.error("Failed to update note:", err);
-            setError(err.response?.data?.message)
+            toast.error(
+                err.response?.data?.message || "Something went wrong"
+            );
 
         }
       }
@@ -167,10 +187,6 @@ export default function PatientDetails({doctor}) {
     }
     return (
         <>
-            {error && 
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
-                {error}
-            </div>}
         {isEditing ?(
             <form onSubmit={handleSubmit(onSubmit)}
             className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-md space-y-4 mt-8"
@@ -320,7 +336,6 @@ export default function PatientDetails({doctor}) {
                     type="submit">Save</button>
                     <button type="button" onClick={() => {
                         setIsEditing(false)
-                        setError("")
                     }}
                     className="w-full bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition"
                     >Cancel</button>
@@ -429,21 +444,21 @@ export default function PatientDetails({doctor}) {
                 <div className="bg-white rounded-xl p-6 mt-6">
                     <h2 className="text-2xl font-semibold text-gray-800 mb-4">Clinical Notes </h2>
                     <form
-                        onSubmit={handleSubmit(noteSubmit)}
+                        onSubmit={noteHandleSubmit(noteSubmit)}
                         className="mb-6"
                     >
                         <textarea
                             rows="1"
                             placeholder="Add a clinical note..."
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            {...register("content", {
+                            {...noteRegister("content", {
                                 required: "Note content is required"
                             })}
                         />
 
-                        {errors.content && (
+                        {noteErrors.content && (
                             <p className="text-red-500 text-sm mt-1">
-                                {errors.content.message}
+                                {noteErrors.content.message}
                             </p>
                         )}
 

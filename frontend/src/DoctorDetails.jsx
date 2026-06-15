@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { showDoctorAPI, editDoctorAPI, deleteDoctorAPI } from "./services/docService";
 import { useForm } from "react-hook-form"
 
@@ -18,7 +19,6 @@ export default function DoctorDetails() {
     formState: {errors}
   } = useForm()
   const [doc, setDoc] = useState()
-  const [error, setError] = useState()
   const [loading, setLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
 
@@ -28,8 +28,10 @@ export default function DoctorDetails() {
       setDoc(res.data.doctor)
 
     }catch(err){
-      console.error(err.message)
-      setError(err.response?.data?.message)
+      console.error('Unable to fetch the doctor details',err.message)
+      toast.error(
+        error.response?.data?.message || "Something went wrong"
+      );
     }finally{
       setLoading(false)
     }
@@ -54,10 +56,13 @@ export default function DoctorDetails() {
   async function handleDelete(id){
     try{
       await deleteDoctorAPI(id)
+      toast.success("Doctor deleted successfully");
       navigate('/dashboard')
     }catch(err){
       console.error(err.message)
-      setError(err.response?.data?.message)
+      toast.error(
+        error.response?.data?.message || "Something went wrong"
+      );
     }
   }
 
@@ -66,11 +71,14 @@ export default function DoctorDetails() {
         const res = await editDoctorAPI(id, data)
         setDoc(res.data.doctor)
         setIsEditing(false)
+      toast.success("Doctor details updated successfully");
 
         
     } catch (err) {
       console.error(err.message)
-      setError(err.response?.data?.message)
+      toast.error(
+        error.response?.data?.message || "Something went wrong"
+      );
     }
 
   }
@@ -79,9 +87,6 @@ export default function DoctorDetails() {
     return <p>Loading...</p>
   }
 
-  if(error){
-    return <p>{error}</p>
-  }
 
   return(
     <div className="max-w-3xl mx-auto p-6">
