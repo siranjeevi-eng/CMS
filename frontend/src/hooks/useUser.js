@@ -17,6 +17,7 @@ export default function useUser(){
 
             localStorage.setItem("token", response.data.token)
             localStorage.setItem("role", response.data.user.role)
+            localStorage.setItem("userId", response.data.user._id)
 
             navigate("/dashboard")
 
@@ -33,8 +34,11 @@ export default function useUser(){
             const response = await loginUser(data)
 
             if(response.data.token){
+
             localStorage.setItem("token", response.data.token)
             localStorage.setItem("role", response.data.user.role)
+            localStorage.setItem("userId", response.data.user._id)
+
             toast.success("Logged In");
             navigate("/dashboard")
 
@@ -55,8 +59,9 @@ export default function useUser(){
     function logout(){
         localStorage.removeItem('token')
         localStorage.removeItem('role')
+        localStorage.removeItem('userId')
         navigate("/login")
     }
 
-    return{user, err, insertUser, LoginUser, logout}
+    return{user, insertUser, LoginUser, logout}
 }

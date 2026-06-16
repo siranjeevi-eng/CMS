@@ -4,6 +4,15 @@ module.exports.addNote = async(req,res)=>{
     const {content} = req.body;
     const {patientId} = req.params;
         try{
+            const patient = await Patient.findById(patientId);
+
+            if (
+                patient.medicalRecord.doctorAssigned.toString() !== req.user.id
+            ) {
+                return res.status(403).json({
+                    message: "You are not assigned to this patient"
+                });
+            }
         const note = await Notes.create({ content, patientId, author: req.user.id})
         res.status(201).json({message: 'Note added successfully', note})
        
@@ -15,7 +24,6 @@ module.exports.addNote = async(req,res)=>{
 module.exports.getNote = async(req,res)=>{
     const {patientId} = req.params;
     try{
-
         const notes = await Notes.find({ patientId: patientId }).populate('author').sort({createdAt:-1})
         res.status(201).json(notes)
     }
@@ -30,6 +38,15 @@ module.exports.editNote = async(req,res)=>{
     const {content} = req.body;
 
     try{
+        const patient = await Patient.findById(patientId);
+
+        if (
+            patient.medicalRecord.doctorAssigned.toString() !== req.user.id
+        ) {
+            return res.status(403).json({
+                message: "You are not assigned to this patient"
+            });
+        }
         const note = await Notes.findByIdAndUpdate(noteId,{content},{new: true})
         if(!note){
            return res.status(404).json({message: 'Note not found'})

@@ -20,7 +20,7 @@ import NotFound from './NotFound'
 
 
 function App() {
-  const {insertUser, LoginUser,logout, err} = useUser()
+  const {insertUser, LoginUser,logout} = useUser()
   const  {doctor, addDoctor, docErr} = useDocotor()
 
   return (
@@ -40,7 +40,7 @@ function App() {
  
       <Route path = "/" element={<Home/>}/>
 
-      <Route path="signup" element={<Signup insertUser={insertUser} err={err}/>}/>
+      <Route path="signup" element={<Signup insertUser={insertUser}/>}/>
 
       <Route path="login" element={<Login LoginUser={LoginUser}/>}/>
 

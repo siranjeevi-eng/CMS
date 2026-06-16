@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 
 import { showOnePatientAPI, editPatientAPI, deletePatientAPI } from "../services/patientService"
 import { addNotesAPI, getNotesAPI, editNoteAPI } from "../services/noteService"
+import { createAttachmentAPI, getAttachmentAPI, downloadAttachmentAPI } from "../services/attachmentService"
 
 export default function PatientDetails({doctor}) {
 
@@ -13,16 +14,20 @@ export default function PatientDetails({doctor}) {
     const navigate = useNavigate()
 
     const role = localStorage.getItem("role")
+    const currentDoctorId = localStorage.getItem("userId")
 
-    const [patient, setPatient] = useState()
-    const [isEditing, setIsEditing] = useState(false)
+
+    const [patient, setPatient] = useState();
+    const [isEditing, setIsEditing] = useState(false);
     const [editingNoteId, setEditingNoteId] = useState(null);
-    const [editedContent, setEditedContent] = useState("")
-    const [loading, setLoading] = useState(true)
-    const [content, setContent] = useState("")
-    const [note, setNote] = useState([])
-    const patientForm = useForm()
-    const noteForm = useForm()
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [attachments, setAttachments] = useState([]);
+    const [editedContent, setEditedContent] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [content, setContent] = useState("");
+    const [note, setNote] = useState([]);
+    const patientForm = useForm();
+    const noteForm = useForm();
     const {
         handleSubmit,
         register,
@@ -127,6 +132,64 @@ export default function PatientDetails({doctor}) {
            
       }
 
+      async function handleUpload(e){
+          e.preventDefault();
+            if(!selectedFile){
+                toast.error("Please select a file");
+                return;
+            }
+             const formData = new FormData()
+             formData.append("attachment", selectedFile)
+
+             try{
+                 await createAttachmentAPI(formData, patientId)
+                 toast.success("File uploaded successfully")
+                 setSelectedFile(null)
+                 fetchAttachment()
+             }
+             catch(err){
+                toast.error(err.response?.data?.message || "File upload failed")
+             }
+      }
+      useEffect(()=> {
+        fetchAttachment()
+      }, [])
+      async function fetchAttachment() {
+            try{
+                const fileAttachment = await getAttachmentAPI(patientId);
+                setAttachments(fileAttachment.data.attachments)
+            }catch(err){
+                console.error("Failed to fetch notes", err);
+                toast.error(
+                    err.response?.data?.message || "Something went wrong"
+                )
+            }
+      } 
+
+    async function handleDownload(file) {
+        try {
+            const res = await downloadAttachmentAPI(patientId, file._id);
+
+            const response = await fetch(res.data.downloadUrl);
+            const blob = await response.blob();
+
+            const blobUrl = window.URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.href = blobUrl;
+            link.download = `${file.originalName}`;
+            document.body.appendChild(link);
+            link.click();
+
+            link.remove();
+            window.URL.revokeObjectURL(blobUrl);
+        } catch (err) {
+            toast.error(
+                err.response?.data?.message || "Download failed"
+            );
+        }
+    }
+
       async function noteSubmit(content){
         try{
             const newNote = await addNotesAPI(content, patientId)
@@ -135,7 +198,7 @@ export default function PatientDetails({doctor}) {
         }catch(err){
             console.error("Failed to add notes:", err);
             toast.error(
-                error.response?.data?.message || "Something went wrong"
+                err.response?.data?.message || "Something went wrong"
             );    
         }
       }
@@ -180,7 +243,8 @@ export default function PatientDetails({doctor}) {
 
         }
       }
-
+    const isAssignedDoctor =
+        patient?.medicalRecord?.doctorAssigned?._id === currentDoctorId;
 
     if (loading) {
         return <p>Loading patient details...</p>
@@ -435,44 +499,115 @@ export default function PatientDetails({doctor}) {
                                 )}
 
                             </div>
+                            
+                            </div>
 
+                        <div className="bg-white rounded-xl shadow-md p-6 mt-6">
+                            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                                Attachments
+                            </h2>
+
+                            {isAssignedDoctor && (
+                                <form
+                                    onSubmit={handleUpload}
+                                    className="flex flex-col md:flex-row gap-4 items-center mb-6"
+                                >
+                                    <input
+                                        type="file"
+                                        onChange={(e) => setSelectedFile(e.target.files[0])}
+                                        className="w-full border border-gray-300 rounded-lg px-3 py-2
+                   file:mr-4 file:px-4 file:py-2 file:border-0
+                   file:bg-blue-100 file:text-blue-700
+                   file:rounded-md file:cursor-pointer"
+                                    />
+
+                                    <button
+                                        type="submit"
+                                        className="bg-blue-600 text-white px-5 py-2 rounded-lg
+                   hover:bg-blue-700 transition cursor-pointer"
+                                    >
+                                        Upload
+                                    </button>
+                                </form>
+                            )}
+
+                            {attachments.length === 0 ? (
+                                <p className="text-gray-500 italic">
+                                    No attachments uploaded.
+                                </p>
+                            ) : (
+                                <div className="space-y-3">
+                                    {attachments.map((file) => (
+                                        <div
+                                            key={file._id}
+                                            className="flex justify-between items-center border rounded-lg p-4"
+                                        >
+                                            <div>
+                                                <p className="font-medium">{file.originalName}</p>
+                                                <p className="text-sm text-gray-500">
+                                                    Uploaded by Dr. {file.uploadedBy.name}
+                                                </p>
+                                            </div>
+                                            <a
+                                                href={file.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-blue-600 hover:underline"
+                                            >
+                                                View
+                                            </a>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDownload(file)}
+                                                className="text-green-600 hover:underline cursor-pointer"
+                                            >
+                                                Download
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
+
                     </div>
         )}
 
             <div className="text-l mb-4">
                 <div className="bg-white rounded-xl p-6 mt-6">
                     <h2 className="text-2xl font-semibold text-gray-800 mb-4">Clinical Notes </h2>
-                    <form
-                        onSubmit={noteHandleSubmit(noteSubmit)}
-                        className="mb-6"
-                    >
-                        <textarea
-                            rows="1"
-                            placeholder="Add a clinical note..."
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            {...noteRegister("content", {
-                                required: "Note content is required"
-                            })}
-                        />
+                    {
+                        isAssignedDoctor && 
+                        <form
+                            onSubmit={noteHandleSubmit(noteSubmit)}
+                            className="mb-6"
+                        >
+                            <textarea
+                                rows="1"
+                                placeholder="Add a clinical note..."
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                {...noteRegister("content", {
+                                    required: "Note content is required"
+                                })}
+                            />
 
-                        {noteErrors.content && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {noteErrors.content.message}
-                            </p>
-                        )}
+                            {noteErrors.content && (
+                                <p className="text-red-500 text-sm mt-1">
+                                    {noteErrors.content.message}
+                                </p>
+                            )}
 
-                        <div className="mt-3 flex justify-end">
-                            <button
-                                type="submit"
-                                className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition cursor-pointer"
-                            >
-                                Add Note
-                            </button>
-                        </div>
+                            <div className="mt-3 flex justify-end">
+                                <button
+                                    type="submit"
+                                    className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition cursor-pointer"
+                                >
+                                    Add Note
+                                </button>
+                            </div>
 
-                      
-                    </form>
+
+                        </form>
+                    }
 
                     {(note.length === 0) && (
                         <p className="text-center text-gray-500 py-8 italic">
@@ -536,18 +671,19 @@ export default function PatientDetails({doctor}) {
                                     <p className="text-gray-700 whitespace-pre-wrap">
                                        {n.content}
                                     </p>    
-                                    <button 
-                                        type="button"
-                                        className="text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
-                                        onClick={() => handleNoteEdit(n)}>edit</button>
-                                    </>)}
+                                            {isAssignedDoctor && 
+                                            <button
+                                                type="button"
+                                                className="text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                                                onClick={() => handleNoteEdit(n)}>edit
+                                            </button>}
+                                    </>
+                                )}
                               
                                 </div>
-                            ))
-}
-                 
+                            ))}
                 </div>
-                           </div>
+                    </div>
 
        </>  
     )}
