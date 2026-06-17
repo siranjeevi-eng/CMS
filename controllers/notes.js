@@ -1,13 +1,16 @@
 const Notes = require('../models/notes')
+const Patient = require('../models/patient')
+const Doctor = require('../models/doctor')
 
 module.exports.addNote = async(req,res)=>{
     const {content} = req.body;
     const {patientId} = req.params;
         try{
             const patient = await Patient.findById(patientId);
+            const doctor = await Doctor.findOne({ userId: req.user.id })
 
             if (
-                patient.medicalRecord.doctorAssigned.toString() !== req.user.id
+                patient.medicalRecord.doctorAssigned.toString() !== doctor._id.toString()
             ) {
                 return res.status(403).json({
                     message: "You are not assigned to this patient"
@@ -34,14 +37,16 @@ module.exports.getNote = async(req,res)=>{
 } 
 
 module.exports.editNote = async(req,res)=>{
-    const {noteId} = req.params;
+    const {patientId, noteId} = req.params;
     const {content} = req.body;
 
     try{
         const patient = await Patient.findById(patientId);
 
+        const doctor = await Doctor.findOne({ userId: req.user.id })
+
         if (
-            patient.medicalRecord.doctorAssigned.toString() !== req.user.id
+            patient.medicalRecord.doctorAssigned.toString() !== doctor._id.toString()
         ) {
             return res.status(403).json({
                 message: "You are not assigned to this patient"

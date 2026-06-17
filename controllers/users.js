@@ -14,7 +14,6 @@ module.exports.registerUser = async(req,res, next)=>{
         if (role === "doctor") {
 
             const doctor = await Doctor.findOne({ email })
-
             if (!doctor) {
                 return res.status(400).json({
                     message: "Doctor not registered by admin"
@@ -122,7 +121,7 @@ module.exports.loginUser = async(req,res)=>{
         res.json({
             token,
             user:{
-                id: user._id,
+                _id: user._id,
                 name: user.name,
                 role: user.role
             }

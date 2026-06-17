@@ -94,3 +94,26 @@ module.exports.downloadFile = async(req,res)=>{
         res.status(500).json({ message: 'Internal server error' })
     }
 }
+
+module.exports.deleteAttachment = async(req,res)=>{
+    const {attachmentId} = req.params;
+    console.log(attachmentId)
+    try{
+        const attachment = await Attachment.findById(attachmentId)
+        console.log(attachment)
+        if(!attachment){
+            return res.status(404).json({message: 'File not found'})
+        }
+
+        await cloudinary.uploader.destroy(attachment.cloudinaryId)
+
+        await Attachment.findByIdAndDelete(attachmentId)
+        
+        return res.status(200).json({
+            message: "Attachment deleted successfully",
+        });
+    }
+    catch(err){
+        res.status(500).json({message: 'Internal server error'})
+    }
+}

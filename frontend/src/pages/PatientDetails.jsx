@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useParams } from "react-router-dom"
 import { useNavigate, Link } from "react-router-dom"
 import { useForm } from "react-hook-form"
@@ -15,8 +15,9 @@ export default function PatientDetails({doctor}) {
 
     const role = localStorage.getItem("role")
     const currentDoctorId = localStorage.getItem("userId")
+    
 
-
+    const fileInputRef = useRef(null);
     const [patient, setPatient] = useState();
     const [isEditing, setIsEditing] = useState(false);
     const [editingNoteId, setEditingNoteId] = useState(null);
@@ -107,7 +108,7 @@ export default function PatientDetails({doctor}) {
     
       }
       
-       async function handleDelete(patientId) {
+       async function handleDelete() {
        const confirmed = window.confirm(
                "Are you sure you want to delete this patient?"
            )
@@ -145,6 +146,10 @@ export default function PatientDetails({doctor}) {
                  await createAttachmentAPI(formData, patientId)
                  toast.success("File uploaded successfully")
                  setSelectedFile(null)
+
+                 if (fileInputRef.current) {
+                     fileInputRef.current.value = "";
+                 }
                  fetchAttachment()
              }
              catch(err){
@@ -243,8 +248,12 @@ export default function PatientDetails({doctor}) {
 
         }
       }
-    const isAssignedDoctor =
-        patient?.medicalRecord?.doctorAssigned?._id === currentDoctorId;
+
+
+
+    
+        const isAssignedDoctor =
+            patient?.medicalRecord?.doctorAssigned?.userId === currentDoctorId
 
     if (loading) {
         return <p>Loading patient details...</p>
@@ -252,6 +261,7 @@ export default function PatientDetails({doctor}) {
     return (
         <>
         {isEditing ?(
+            
             <form onSubmit={handleSubmit(onSubmit)}
             className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-md space-y-4 mt-8"
             >
@@ -491,7 +501,7 @@ export default function PatientDetails({doctor}) {
 
                                 {role === "admin" && (
                                     <button
-                                        onClick={() => handleDelete(id)}
+                                        onClick={() => handleDelete()}
                                         className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
                                     >
                                         Delete
@@ -514,6 +524,7 @@ export default function PatientDetails({doctor}) {
                                 >
                                     <input
                                         type="file"
+                                        ref={fileInputRef}
                                         onChange={(e) => setSelectedFile(e.target.files[0])}
                                         className="w-full border border-gray-300 rounded-lg px-3 py-2
                    file:mr-4 file:px-4 file:py-2 file:border-0
