@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 
 import { showOnePatientAPI, editPatientAPI, deletePatientAPI } from "../services/patientService"
 import { addNotesAPI, getNotesAPI, editNoteAPI } from "../services/noteService"
-import { createAttachmentAPI, getAttachmentAPI, downloadAttachmentAPI } from "../services/attachmentService"
+import { createAttachmentAPI, getAttachmentAPI, downloadAttachmentAPI, deleteAttachmentAPI } from "../services/attachmentService"
 
 export default function PatientDetails({doctor}) {
 
@@ -189,6 +189,29 @@ export default function PatientDetails({doctor}) {
             link.remove();
             window.URL.revokeObjectURL(blobUrl);
         } catch (err) {
+            console.error('Failed to download the file', err)
+            toast.error(
+                err.response?.data?.message || "Download failed"
+            );
+        }
+    }
+
+    async function handleFileDelete(attachmentId) {
+        
+        const confirmed = window.confirm(
+            "Are you sure you want to delete this attachment?"
+        )
+
+        if (!confirmed) {
+            return
+        }
+        try{            
+            toast.success('File deleted successfully')
+            await deleteAttachmentAPI(patientId, attachmentId);
+            fetchAttachment();
+        }
+        catch(err){
+            console.error('Failed to delete the file', err)
             toast.error(
                 err.response?.data?.message || "Download failed"
             );
@@ -211,6 +234,18 @@ export default function PatientDetails({doctor}) {
       useEffect(()=>{
         fetchNotes()
       }, [])
+
+    function formatFileSize(bytes) {
+        if (bytes < 1024) {
+            return `${bytes} B`;
+        }
+
+        if (bytes < 1024 * 1024) {
+            return `${(bytes / 1024).toFixed(1)} KB`;
+        }
+
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    }
 
     async function fetchNotes() {
         try {
@@ -558,6 +593,9 @@ export default function PatientDetails({doctor}) {
                                                 <p className="text-sm text-gray-500">
                                                     Uploaded by Dr. {file.uploadedBy.name}
                                                 </p>
+                                                <p className="text-sm text-gray-500">
+                                                    File size: {formatFileSize(file.fileSize)}
+                                                </p>
                                             </div>
                                             <a
                                                 href={file.url}
@@ -574,6 +612,15 @@ export default function PatientDetails({doctor}) {
                                             >
                                                 Download
                                             </button>
+                                            {isAssignedDoctor && 
+                                            
+                                            <button
+                                                type="button"
+                                                onClick={() => handleFileDelete(file._id)}
+                                                className="text-red-600 hover:underline cursor-pointer"
+                                            >
+                                                Delete
+                                            </button>}
                                         </div>
                                     ))}
                                 </div>

@@ -8,4 +8,5 @@ router.post('/', authMiddleware,  upload.single('attachment'), createAttachment)
 router.get('/', authMiddleware, getAttachments)
 router.get('/:attachmentId/download', authMiddleware, downloadFile)
 router.delete('/:attachmentId/delete', authMiddleware, authorizeRoles('doctor'),  deleteAttachment)
+
 module.exports = router;

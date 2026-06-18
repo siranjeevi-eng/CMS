@@ -97,10 +97,8 @@ module.exports.downloadFile = async(req,res)=>{
 
 module.exports.deleteAttachment = async(req,res)=>{
     const {attachmentId} = req.params;
-    console.log(attachmentId)
     try{
         const attachment = await Attachment.findById(attachmentId)
-        console.log(attachment)
         if(!attachment){
             return res.status(404).json({message: 'File not found'})
         }
