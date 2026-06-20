@@ -4,14 +4,21 @@ import { getDoctor, AddDoctorAPI } from "../services/docService"
 
 
 export default function useDocotor(){
-    const [docErr,setDocErr] = useState(null)
-    const [doctor, setDoctor] = useState([])
-    
+    const [docErr,setDocErr] = useState(null);
+    const [doctor, setDoctor] = useState([]);
+    const [doctorCount, setDcotorCount] = useState(0);
+    const [patientCount, setPatientCount] = useState(0);
+    const [patientsAddedToday, setPatientsAddedToday] = useState(0);
+    const [patientsAddedThisMonth, setPatientsAddedThisMonth] = useState(0);
+
     const fetchDoctor = async function (){
             try{
                 const response = await getDoctor()
-                setDoctor(response.data.doctors)
-                
+                setDoctor(response.data.doctors);
+                setDcotorCount(response.data.totalDoctors);
+                setPatientCount(response.data.totalPatients);
+                setPatientsAddedToday(response.data.patientsAddedToday);
+                setPatientsAddedThisMonth(response.data.patientsAddedThisMonth);
             }catch(err){
                 setDocErr(err.message)
             }
@@ -35,6 +42,6 @@ export default function useDocotor(){
 
     
 
-    return { docErr, doctor, addDoctor}
+    return { docErr, doctor, addDoctor, doctorCount, patientCount, patientsAddedToday, patientsAddedThisMonth}
 
 }

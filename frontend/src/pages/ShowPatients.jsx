@@ -72,7 +72,13 @@ export default function ShowPatients(){
                                     {patient.map((p) => (
                                         <tr key={p._id} className="border-t">
                                             <td className="p-4">{p.patientInfo.name}</td>
-                                            <td className="p-4">{p.medicalRecord.doctorAssigned.name}</td>
+                                            {p.medicalRecord.doctorAssigned?(
+
+                                                <td className="p-4">{p.medicalRecord.doctorAssigned.name}</td>
+                                                
+                                            ):(                                                    
+                                                <td className="p-4">Unassigned</td>
+                                            )}
                                             <td className="p-4">
                                                 <Link to={`/patient/${p._id}`}>
                                                     View

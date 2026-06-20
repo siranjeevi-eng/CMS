@@ -21,7 +21,7 @@ import NotFound from './NotFound'
 
 function App() {
   const {insertUser, LoginUser,logout} = useUser()
-  const  {doctor, addDoctor, docErr} = useDocotor()
+  const { doctor, addDoctor, docErr, doctorCount, patientCount, patientsAddedToday, patientsAddedThisMonth } = useDocotor()
 
   return (
     <>
@@ -57,6 +57,10 @@ function App() {
             element={
               <Dashboard
                 doctor={doctor}
+                doctorCount = {doctorCount}
+                patientCount = {patientCount}
+                patientsAddedToday = {patientsAddedToday}
+                patientsAddedThisMonth={patientsAddedThisMonth}
                 addDoctor={addDoctor}
                 docErr={docErr}
               />

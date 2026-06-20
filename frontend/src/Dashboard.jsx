@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form"
 import { Link } from "react-router-dom"
 import { useState } from "react"
 
-export default function Dashboard({ doctor, addDoctor, docErr}){
+export default function Dashboard({ doctor, addDoctor, docErr, doctorCount, patientCount, patientsAddedToday, patientsAddedThisMonth }){
     
     const role = localStorage.getItem("role")
   
@@ -26,6 +26,7 @@ export default function Dashboard({ doctor, addDoctor, docErr}){
         
       <> 
             <div className="max-w-7xl mx-auto px-6 py-8">
+                <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
                 <input
                     type="text"
                     placeholder="Search doctor..."
@@ -33,8 +34,45 @@ export default function Dashboard({ doctor, addDoctor, docErr}){
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-full max-w-md px-4 py-2 mb-6 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
-                <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+                <div className="flex flex-wrap gap-4 mb-8">
+                    {/* Total Doctors */}
+                    <div className="w-56 bg-white rounded-xl shadow-sm border border-gray-200 p-3 flex flex-col items-center justify-center">
+                        <p className="text-sm font-medium text-gray-500">
+                            👨‍⚕️ Total Doctors
+                        </p>
+                        <h2 className="mt-1 text-4xl font-bold text-gray-900">
+                            {doctorCount}
+                        </h2>
+                    </div>
 
+                    {/* Total Patients */}
+                    <div className="w-56 bg-white rounded-xl shadow-sm border border-gray-200 p-3 flex flex-col items-center justify-center">
+                        <p className="text-sm font-medium text-gray-500">
+                            🧑 Total Patients
+                        </p>
+                        <h2 className="mt-1 text-4xl font-bold text-gray-900">
+                            {patientCount}
+                        </h2>
+                    </div>
+                    {/* Patients Added Today */}
+                    <div className="w-56 bg-white rounded-xl shadow-sm border border-gray-200 p-3 flex flex-col items-center justify-center">
+                        <p className="text-sm font-medium text-gray-500">
+                            🧑 Patients Added Today
+                        </p>
+                        <h2 className="mt-1 text-4xl font-bold text-gray-900">
+                            {patientsAddedToday}
+                        </h2>
+                    </div>
+                    {/* Patients Added this month */}
+                    <div className="w-56 bg-white rounded-xl shadow-sm border border-gray-200 p-3 flex flex-col items-center justify-center">
+                        <p className="text-sm font-medium text-gray-500">
+                            🧑 Patients Added This Month
+                        </p>
+                        <h2 className="mt-1 text-4xl font-bold text-gray-900">
+                            {patientsAddedThisMonth}
+                        </h2>
+                    </div>
+                </div>
                 {filterDoctor.length === 0 ? (
                     <p>No Doctors found...</p>
                 ) : (<div className="grid lg:grid-cols-3 gap-8">

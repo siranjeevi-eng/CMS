@@ -82,7 +82,7 @@ export default function PatientDetails({doctor}) {
 },
             medicalRecord: {
                 ...patient.medicalRecord,
-                doctorAssigned: patient.medicalRecord.doctorAssigned._id,
+                doctorAssigned: patient.medicalRecord.doctorAssigned?._id || "",
 
                 admissionDate:
                     patient.medicalRecord.admissionDate
@@ -102,7 +102,7 @@ export default function PatientDetails({doctor}) {
         }catch(err){
             console.error("Failed to update the patient:", err);
             toast.error(
-                error.response?.data?.message || "Something went wrong"
+                err.response?.data?.message || "Something went wrong"
             );
         }
     
@@ -411,6 +411,7 @@ export default function PatientDetails({doctor}) {
                         {...register("medicalRecord.doctorAssigned")}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                     >
+                        <option value="">unassigned</option>
                         {doctor.map((d) => (
                             <option
                                 key={d._id}
@@ -420,9 +421,6 @@ export default function PatientDetails({doctor}) {
                             </option>
                         ))}
                     </select>
-                    {errors.medicalRecord?.doctorAssigned && (
-                        <p className="text-red-500 text-sm">{errors.medicalRecord.doctorAssigned.message}</p>
-                    )}
                     {errors.medicalRecord?.doctorAssigned && (
                         <p className="text-red-500 text-sm">{errors.medicalRecord.doctorAssigned.message}</p>
                     )}
@@ -497,16 +495,24 @@ export default function PatientDetails({doctor}) {
                                         Medical Information
                                     </h2>
 
-                                    <p className="mb-2">
-                                        <span className="font-semibold">Doctor Assigned:</span>{" "}
-                                        <Link
-                                            to={`/doctor/${patient?.medicalRecord?.doctorAssigned?._id}`}
-                                            className="text-blue-600 hover:text-blue-800 hover:underline"
-                                        >
-                                            {patient?.medicalRecord?.doctorAssigned?.name}
-                                        </Link>
-                                    </p>
+                                    {patient?.medicalRecord?.doctorAssigned ?(
+                                        <p className="mb-2">
+                                            <span className="font-semibold">Doctor Assigned:</span>{" "}
+                                            <Link
+                                                to={`/doctor/${patient?.medicalRecord?.doctorAssigned?._id}`}
+                                                className="text-blue-600 hover:text-blue-800 hover:underline"
+                                            >
+                                                {patient?.medicalRecord?.doctorAssigned?.name}
+                                            </Link>
+                                        </p>
 
+                                    ):(
+                                            <p className="mb-2">
+                                                <span className="font-semibold">Doctor Assigned:</span>{" "}
+                                                Unassigned 
+                                            </p> 
+                                    )}
+                                  
                                     <p className="mb-2">
                                         <span className="font-semibold">Disease:</span>{" "}
                                         {patient?.medicalRecord?.disease}
@@ -683,7 +689,7 @@ export default function PatientDetails({doctor}) {
                                         Dr. {n.author.name}
                                     </h3>
 
-                                    <span className="text-sm text-gray-500">
+                                    <span className="text-xs text-gray-400 whitespace-nowrap">
                                         {new Date(n.createdAt).toLocaleString('en-IN', {
                                             day: '2-digit',
                                             month: 'short',
