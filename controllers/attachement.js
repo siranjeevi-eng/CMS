@@ -2,6 +2,7 @@ const streamifier = require("streamifier");
 const cloudinary = require("../config/cloudinary");
 const Attachment = require('../models/attachments')
 const Patient = require('../models/patient');
+const Log = require('../models/log')
 
 module.exports.createAttachment = async(req,res)=>{
     const {patientId} = req.params;
@@ -45,6 +46,12 @@ try{
                 uploadedBy: req.user.id,
                 patient: patientId,
         });
+        await Log.create({
+            patient: patientId,
+            performedBy: req.user.id,
+            action: "ATTACHMENT_UPLOADED"
+        })
+
 
         res.status(201).json({message: 'Attachment added successfully', attachment})
     
@@ -107,11 +114,18 @@ module.exports.deleteAttachment = async(req,res)=>{
 
         await Attachment.findByIdAndDelete(attachmentId)
         
+        await Log.create({
+            patient: attachment.patient,
+            performedBy: req.user.id,
+            action: "ATTACHMENT_DELETED"
+        })
+
+        
         return res.status(200).json({
             message: "Attachment deleted successfully",
         });
     }
     catch(err){
-        res.status(500).json({message: 'Internal server error'})
+        res.status(500).json({message: 'Internal server error', error: err.message})
     }
 }

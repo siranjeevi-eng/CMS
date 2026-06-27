@@ -9,6 +9,7 @@ const doctorRoutes = require('./routes/doctor')
 const patientRoutes = require('./routes/patient')
 const noteRoutes = require('./routes/notes') 
 const attachementRoutes = require('./routes/attachement')  
+const logRoute = require('./routes/log')
 const ExpressError = require('./utils/ExpressError')
 
 
@@ -29,6 +30,7 @@ app.use('/cms/doctor', doctorRoutes)
 app.use('/cms/patient', patientRoutes)
 app.use('/cms/patient/:patientId/note', noteRoutes)
 app.use('/cms/patient/:patientId/attachment', attachementRoutes)
+app.use('/cms/patient/:patientId', logRoute)
 app.all(/(.*)/, (req, res, next) => {
     next(new ExpressError('Page Not Found', 404));
 });

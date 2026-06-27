@@ -36,6 +36,11 @@ const PatientSchema = new Schema({
             type: String,
             required: true
         },
+        status:{
+            type: String,
+            enum: ['under_treatment','recovered', 'discharged'],
+            default: 'under_treatment'
+        },
         admissionDate:{
             type: Date,
             default: Date.now

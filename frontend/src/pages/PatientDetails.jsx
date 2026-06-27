@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { showOnePatientAPI, editPatientAPI, deletePatientAPI } from "../services/patientService"
 import { addNotesAPI, getNotesAPI, editNoteAPI } from "../services/noteService"
 import { createAttachmentAPI, getAttachmentAPI, downloadAttachmentAPI, deleteAttachmentAPI } from "../services/attachmentService"
+import { getLogsAPI } from "../services/logService";
 
 export default function PatientDetails({doctor}) {
 
@@ -27,6 +28,9 @@ export default function PatientDetails({doctor}) {
     const [loading, setLoading] = useState(true);
     const [content, setContent] = useState("");
     const [note, setNote] = useState([]);
+    const [log, setLog] = useState([]);
+    const [activeTab, setActiveTab] = useState("notes");
+
     const patientForm = useForm();
     const noteForm = useForm();
     const {
@@ -96,6 +100,7 @@ export default function PatientDetails({doctor}) {
             const res = await editPatientAPI(patientId, data)
             setPatient(res.data.patient)
             setIsEditing(false)
+            getLog()
             toast.success("Patient details updated successfully");
     
             
@@ -151,6 +156,7 @@ export default function PatientDetails({doctor}) {
                      fileInputRef.current.value = "";
                  }
                  fetchAttachment()
+                 getLog()
              }
              catch(err){
                 toast.error(err.response?.data?.message || "File upload failed")
@@ -209,6 +215,7 @@ export default function PatientDetails({doctor}) {
             toast.success('File deleted successfully')
             await deleteAttachmentAPI(patientId, attachmentId);
             fetchAttachment();
+            getLog();
         }
         catch(err){
             console.error('Failed to delete the file', err)
@@ -222,6 +229,7 @@ export default function PatientDetails({doctor}) {
         try{
             const newNote = await addNotesAPI(content, patientId)
             fetchNotes()
+            getLog()
             noteReset()
         }catch(err){
             console.error("Failed to add notes:", err);
@@ -284,6 +292,13 @@ export default function PatientDetails({doctor}) {
         }
       }
 
+      useEffect(()=>{
+        getLog()
+      },[patientId])
+      async function getLog() {
+        const log = await getLogsAPI(patientId);
+        setLog(log.data)
+      }
 
 
     
@@ -411,7 +426,7 @@ export default function PatientDetails({doctor}) {
                         {...register("medicalRecord.doctorAssigned")}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                     >
-                        <option value="">unassigned</option>
+                        <option value="">Unassigned</option>
                         {doctor.map((d) => (
                             <option
                                 key={d._id}
@@ -424,7 +439,23 @@ export default function PatientDetails({doctor}) {
                     {errors.medicalRecord?.doctorAssigned && (
                         <p className="text-red-500 text-sm">{errors.medicalRecord.doctorAssigned.message}</p>
                     )}
+                    <select
+                        id="medicalRecord.status"
+                        type="text"
+                        placeholder="Patient Status"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 
+                        {...register("medicalRecord.status", {
+                            required: "Patient status is required"
+                        })}
+                    >
+                        <option value="under_treatment">Under Treatment</option>
+                        <option value="recovered">Recovered</option>
+                        <option value="discharged">Discharged</option>
+                    </select>
+                    {errors.patientInfo?.gender && (
+                        <p className="text-red-500 text-sm">{errors.patientInfo.gender.message}</p>
+                    )}
                     <input
                         id="medicalRecord.admissionDate"
                         type="date"
@@ -522,7 +553,10 @@ export default function PatientDetails({doctor}) {
                                         <span className="font-semibold">Treatment:</span>{" "}
                                         {patient?.medicalRecord?.treatment}
                                     </p>
-
+                                    <p className="mb-2">
+                                        <span className="font-semibold">Status:</span>{" "}
+                                        {patient?.medicalRecord?.status}
+                                    </p>
                                     <p>
                                         <span className="font-semibold">Admission Date:</span>{" "}
                                         {patient?.medicalRecord?.admissionDate?.split("T")[0]}
@@ -568,15 +602,15 @@ export default function PatientDetails({doctor}) {
                                         ref={fileInputRef}
                                         onChange={(e) => setSelectedFile(e.target.files[0])}
                                         className="w-full border border-gray-300 rounded-lg px-3 py-2
-                   file:mr-4 file:px-4 file:py-2 file:border-0
-                   file:bg-blue-100 file:text-blue-700
-                   file:rounded-md file:cursor-pointer"
+                                                    file:mr-4 file:px-4 file:py-2 file:border-0
+                                                    file:bg-blue-100 file:text-blue-700
+                                                    file:rounded-md file:cursor-pointer"
                                     />
 
                                     <button
                                         type="submit"
                                         className="bg-blue-600 text-white px-5 py-2 rounded-lg
-                   hover:bg-blue-700 transition cursor-pointer"
+                                                    hover:bg-blue-700 transition cursor-pointer"
                                     >
                                         Upload
                                     </button>
@@ -638,9 +672,32 @@ export default function PatientDetails({doctor}) {
 
             <div className="text-l mb-4">
                 <div className="bg-white rounded-xl p-6 mt-6">
-                    <h2 className="text-2xl font-semibold text-gray-800 mb-4">Clinical Notes </h2>
-                    {
-                        isAssignedDoctor && 
+                    <div className="flex border-b border-gray-200 mb-6">
+                        <button
+                            onClick={() => setActiveTab("notes")}
+                            className={`px-5 py-3 text-sm font-semibold transition border-b-2 cursor-pointer ${activeTab === "notes"
+                                    ? "border-blue-600 text-blue-600"
+                                    : "border-transparent text-gray-500 hover:text-blue-600"
+                                }`}
+                        >
+                            Clinical Notes
+                        </button>
+
+                        <button
+                            onClick={() => setActiveTab("logs")}
+                            className={`px-5 py-3 text-sm font-semibold transition border-b-2 cursor-pointer ${activeTab === "logs"
+                                    ? "border-blue-600 text-blue-600"
+                                    : "border-transparent text-gray-500 hover:text-blue-600"
+                                }`}
+                        >
+                            Activity History
+                        </button>
+                    </div>
+                    {activeTab === "notes" &&(
+                        <>
+                        
+                        {
+                            isAssignedDoctor &&
                         <form
                             onSubmit={noteHandleSubmit(noteSubmit)}
                             className="mb-6"
@@ -678,74 +735,142 @@ export default function PatientDetails({doctor}) {
                             No clinical notes available.
                         </p>)
                     }
-                       
-                        {note.map((n) => (
-                            <div
-                                key={n._id}
-                                className="border-b border-gray-300 py-6 last:border-b-0"
-                            >
-                                <div className="flex justify-between items-center mb-2">
-                                    <h3 className="font-semibold text-gray-800">
-                                        Dr. {n.author.name}
-                                    </h3>
 
-                                    <span className="text-xs text-gray-400 whitespace-nowrap">
-                                        {new Date(n.createdAt).toLocaleString('en-IN', {
-                                            day: '2-digit',
-                                            month: 'short',
-                                            year: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit'
-                                        })}
-                                    </span>
+                    {note.map((n) => (
+                        <div
+                            key={n._id}
+                            className="border-b border-gray-300 py-6 last:border-b-0"
+                        >
+                            <div className="flex justify-between items-center mb-2">
+                                <h3 className="font-semibold text-gray-800">
+                                    Dr. {n.author.name}
+                                </h3>
+
+                                <span className="text-xs text-gray-400 whitespace-nowrap">
+                                    {new Date(n.createdAt).toLocaleString('en-IN', {
+                                        day: '2-digit',
+                                        month: 'short',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}
+                                </span>
+                            </div>
+                            {editingNoteId === n._id ? (
+
+                                <div className="space-y-3">
+                                    <textarea
+                                        rows="1"
+                                        value={editedContent}
+                                        onChange={(e) => setEditedContent(e.target.value)}
+                                        placeholder="Add a clinical note..."
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+
+                                    />
+
+
+                                    <button type="button"
+                                        className="text-sm text-blue-600 hover:text-blue-800 p-1 hover:underline cursor-pointer"
+                                        onClick={() => handleNoteSave(n._id)}>
+                                        Save
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setEditingNoteId(null);
+                                            setEditedContent("");
+                                        }}
+                                        className="text-sm text-gray-600 hover:text-gray-800 p-1 hover:underline cursor-pointer"
+                                    >
+                                        Cancel
+                                    </button>
                                 </div>
-                            { editingNoteId === n._id ? (
-                                
-                                    <div className="space-y-3">
-                                        <textarea
-                                            rows="1"
-                                            value={editedContent}
-                                            onChange={(e)=> setEditedContent(e.target.value)}
-                                            placeholder="Add a clinical note..."
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                          
-                                        />
 
+                            ) : (
 
-                                        <button type="button"
-                                            className="text-sm text-blue-600 hover:text-blue-800 p-1 hover:underline cursor-pointer"
-                                            onClick={()=> handleNoteSave(n._id)}>
-                                            Save
-                                        </button>
+                                <>
+                                    <p className="text-gray-700 whitespace-pre-wrap">
+                                        {n.content}
+                                    </p>
+                                    {isAssignedDoctor &&
                                         <button
                                             type="button"
-                                            onClick={() => {
-                                                setEditingNoteId(null);
-                                                setEditedContent("");
-                                            }}
-                                            className="text-sm text-gray-600 hover:text-gray-800 p-1 hover:underline cursor-pointer"
-                                        >
-                                            Cancel
-                                        </button>
-                                    </div>
-                                        
-                                ) : (
+                                            className="text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                                            onClick={() => handleNoteEdit(n)}>edit
+                                        </button>}
+                                </>
+                            )}
 
-                                  <>
-                                    <p className="text-gray-700 whitespace-pre-wrap">
-                                       {n.content}
-                                    </p>    
-                                            {isAssignedDoctor && 
-                                            <button
-                                                type="button"
-                                                className="text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
-                                                onClick={() => handleNoteEdit(n)}>edit
-                                            </button>}
-                                    </>
-                                )}
-                              
-                                </div>
-                            ))}
+                        </div>
+                    ))}
+                    </>
+                    )}
+
+                    {activeTab === "logs" && (
+                        <>
+                            {log.length === 0 ? (
+                                <p className="text-center text-gray-500 py-8 italic">
+                                    No activity history available.
+                                </p>
+                            ) : (
+                                    <div className="divide-y divide-gray-200">
+
+                                        {log.map((l) => (
+                                            <div
+                                                key={l._id}
+                                                className="py-4"
+                                            >
+                                                <div className="flex justify-between items-center">
+
+                                                    <div className="flex flex-col">
+
+                                                        <p className="text-sm text-gray-800">
+
+                                                            <span className="font-semibold">
+                                                                {l.action === "PATIENT_CREATED" && "📝 Patient has been added"}
+                                                                {l.action === "PATIENT_UPDATED" && "📝 Patient general details updated"}
+                                                                {l.action === "PATIENT_STATUS_UPDATED" && "🔄 Patient status updated"}
+                                                                {l.action === "DOCTOR_REASSIGNED" && "👨‍⚕️ Doctor reassigned"}
+                                                                {l.action === "NOTE_ADDED" && "➕ Clinical note added"}
+                                                                {l.action === "NOTE_UPDATED" && "✏️ Clinical note updated"}
+                                                                {l.action === "ATTACHMENT_UPLOADED" && "📎 Attachment uploaded"}
+                                                                {l.action === "ATTACHMENT_DELETED" && "🗑️ Attachment deleted"}
+                                                            </span>
+
+                                                            {" by "}
+
+                                                            {l.performedBy.role === "admin"
+                                                                ? `Admin ${l.performedBy.name}`
+                                                                : `Dr. ${l.performedBy.name}`}
+                                                        </p>
+
+                                                        {(l.oldValue || l.newValue) && (
+                                                            <p className="text-sm text-gray-500 mt-1">
+                                                                "{l.oldValue}" → "{l.newValue}"
+                                                            </p>
+                                                        )}
+
+                                                    </div>
+
+                                                    <span className="text-xs text-gray-400 whitespace-nowrap">
+                                                        {new Date(l.createdAt).toLocaleString("en-IN", {
+                                                            day: "2-digit",
+                                                            month: "short",
+                                                            year: "numeric",
+                                                            hour: "2-digit",
+                                                            minute: "2-digit",
+                                                        })}
+                                                    </span>
+
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                    </div>
+                            )}
+                        </>
+                    )}
+                   
                 </div>
                     </div>
 

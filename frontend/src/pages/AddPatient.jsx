@@ -155,6 +155,23 @@ export default function AddPatient({doctor}){
                 {errors.medicalRecord?.doctorAssigned && (
                     <p className="text-red-500 text-sm">{errors.medicalRecord.doctorAssigned.message}</p>
                 )}
+                <select
+                    id="medicalRecord.status"
+                    type="text"
+                    placeholder="Patient Status"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+
+                    {...register("medicalRecord.status", {
+                        required: "Patient status is required"
+                    })}
+                >
+                    <option value="under_treatment">Under Treatment</option>
+                    <option value="recovered">Recovered</option>
+                    <option value="discharged">Discharged</option>
+                </select>
+                {errors.patientInfo?.gender && (
+                    <p className="text-red-500 text-sm">{errors.patientInfo.gender.message}</p>
+                )}
 
                 <input
                     id="medicalRecord.admissionDate"

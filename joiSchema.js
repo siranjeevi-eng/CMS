@@ -42,6 +42,7 @@ module.exports.patientSchema = Joi.object({
         disease: Joi.string().trim().required().escapeHTML(),
         treatment: Joi.string().trim().required().escapeHTML(),
         admissionDate: Joi.date().required(),
+        status: Joi.string().trim().required().escapeHTML(),
         doctorAssigned: Joi.string().trim().required().escapeHTML()
     }).required().unknown(false)
 })

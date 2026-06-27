@@ -1,6 +1,7 @@
 const Notes = require('../models/notes')
 const Patient = require('../models/patient')
 const Doctor = require('../models/doctor')
+const Log = require('../models/log')
 
 module.exports.addNote = async(req,res)=>{
     const {content} = req.body;
@@ -17,6 +18,11 @@ module.exports.addNote = async(req,res)=>{
                 });
             }
         const note = await Notes.create({ content, patientId, author: req.user.id})
+        await Log.create({
+            patient: patientId,
+            performedBy: req.user.id,
+            action: "NOTE_ADDED"
+        })
         res.status(201).json({message: 'Note added successfully', note})
        
     }catch(err){
@@ -52,11 +58,21 @@ module.exports.editNote = async(req,res)=>{
                 message: "You are not assigned to this patient"
             });
         }
+        const existingNote = await Notes.findById(noteId)
         const note = await Notes.findByIdAndUpdate(noteId,{content},{new: true})
         if(!note){
            return res.status(404).json({message: 'Note not found'})
         }
+        if(existingNote.content !== note.content){
 
+           await Log.create({
+                patient: patientId,
+                performedBy: req.user.id,
+                action: "NOTE_UPDATED",
+                oldValue: existingNote.content,
+                newValue: note.content
+            })
+        }  
         res.status(200).json({ message: 'Note updated sucessfully', note })
     }
     catch(err){
