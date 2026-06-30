@@ -33,9 +33,26 @@ module.exports.addPatient = async(req,res)=>{
 module.exports.getPatients = async(req,res)=>{
     try{
         const search = req.query.search || '';
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 10;
 
-        const patients = await Patient.find({"patientInfo.name":{$regex:search, $options:'i'}}).populate('medicalRecord.doctorAssigned')
-        res.status(200).json({ patients })
+        const filter = search 
+        ?{  "patientInfo.name": {  $regex: search, $options: "i"}}
+        :{};
+
+        const patients = await Patient.find(filter)
+        .populate('medicalRecord.doctorAssigned')
+        .skip((page-1)*limit)
+        .limit(limit)
+
+        const totalPatients = await Patient.countDocuments(filter)
+
+        res.status(200).json({ 
+            patients,
+            currentPage: page,
+            totalPages: Math.ceil(totalPatients/limit),
+            totalPatients
+        })
     }
     catch(err){
         res.status(500).json({message: 'Internal server error', error: err.message})

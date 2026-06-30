@@ -8,12 +8,15 @@ export default function ShowPatients(){
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState("")
     const [search, setSearch] = useState("")
+    const [page, setPage] = useState(1)
+    const [totalPages, setTotalPages] = useState(1)
 
     useEffect(() => {
         async function fetchPatients() {
             try {
-                const res = await getPatientsAPI(search)
+                const res = await getPatientsAPI(search, page)
                 setPatient(res.data.patients)
+                setTotalPages(res.data.totalPages)
                 setError("")
 
             } 
@@ -28,7 +31,7 @@ export default function ShowPatients(){
 
         fetchPatients()
 
-    }, [search]);
+    }, [search, page]);
 
 
     if (loading) {
@@ -97,6 +100,38 @@ export default function ShowPatients(){
                 >
                     Add New Patient
                 </Link>
+                <div className="flex justify-center items-center gap-2 mt-6">
+
+                    <button
+                        onClick={() => setPage(page - 1)}
+                        disabled={page === 1}
+                        className="px-4 py-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                    >
+                        Previous
+                    </button>
+
+                    {Array.from({ length: totalPages }, (_, index) => (
+                        <button
+                            key={index}
+                            onClick={() => setPage(index + 1)}
+                            className={`px-4 py-2 rounded ${page === index + 1
+                                    ? "bg-blue-600 text-white"
+                                    : "border hover:bg-gray-100"
+                                }`}
+                        >
+                            {index + 1}
+                        </button>
+                    ))}
+
+                    <button
+                        onClick={() => setPage(page + 1)}
+                        disabled={page === totalPages}
+                        className="px-4 py-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                    >
+                        Next
+                    </button>
+
+                </div>
         </div>        
                 
         </>

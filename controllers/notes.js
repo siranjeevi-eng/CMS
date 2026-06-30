@@ -32,9 +32,22 @@ module.exports.addNote = async(req,res)=>{
 
 module.exports.getNote = async(req,res)=>{
     const {patientId} = req.params;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 5;
     try{
-        const notes = await Notes.find({ patientId: patientId }).populate('author').sort({createdAt:-1})
-        res.status(201).json(notes)
+        const notes = await Notes.find({ patientId: patientId })
+        .populate('author')
+        .sort({createdAt:-1})
+        .skip((page-1)*limit)
+        .limit(limit)
+        const totalNotes = await Notes.countDocuments({patientId: patientId})
+        res.status(201).json({ 
+            notes,
+            currentPage: page,
+            totalPages: Math.ceil(totalNotes/limit),
+            totalNotes
+        }
+        )
     }
     catch(err){
         res.status(500).json({message:'Internal server error', error:err.message})

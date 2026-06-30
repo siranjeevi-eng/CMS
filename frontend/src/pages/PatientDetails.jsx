@@ -29,7 +29,12 @@ export default function PatientDetails({doctor}) {
     const [content, setContent] = useState("");
     const [note, setNote] = useState([]);
     const [log, setLog] = useState([]);
+    const [notesPage, setNotesPage] = useState(1);
+    const [notesTotalPages, setNotesTotalPages] = useState(1);
+    const [logPage, setLogPage] = useState(1);
+    const [logTotalPages, setLogTotalPages] = useState(1);
     const [activeTab, setActiveTab] = useState("notes");
+
 
     const patientForm = useForm();
     const noteForm = useForm();
@@ -239,10 +244,6 @@ export default function PatientDetails({doctor}) {
         }
       }
 
-      useEffect(()=>{
-        fetchNotes()
-      }, [])
-
     function formatFileSize(bytes) {
         if (bytes < 1024) {
             return `${bytes} B`;
@@ -255,10 +256,15 @@ export default function PatientDetails({doctor}) {
         return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     }
 
+    useEffect(() => {
+        fetchNotes()
+    }, [notesPage])
+
     async function fetchNotes() {
         try {
-            const notes = await getNotesAPI(patientId)
-            setNote(notes.data)
+            const res = await getNotesAPI(patientId,notesPage)
+            setNote(res.data.notes)
+            setNotesTotalPages(res.data.totalPages)
         }
         catch (err) {
             console.error("Failed to load notes:", err);
@@ -294,10 +300,11 @@ export default function PatientDetails({doctor}) {
 
       useEffect(()=>{
         getLog()
-      },[patientId])
+      },[patientId, logPage])
       async function getLog() {
-        const log = await getLogsAPI(patientId);
-        setLog(log.data)
+        const res = await getLogsAPI(patientId, logPage);
+        setLogTotalPages(res.data.totalPages)
+        setLog(res.data.log)
       }
 
 
@@ -800,9 +807,41 @@ export default function PatientDetails({doctor}) {
                                         </button>}
                                 </>
                             )}
-
                         </div>
+                        
                     ))}
+                            <div className="flex items-center justify-center gap-1 mt-8 text-sm">
+
+                                <button
+                                    onClick={() => setNotesPage(notesPage - 1)}
+                                    disabled={notesPage === 1}
+                                    className="px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-100 disabled:text-gray-300 disabled:hover:bg-transparent"
+                                >
+                                    ← Previous
+                                </button>
+
+                                {Array.from({ length: notesTotalPages }, (_, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => setNotesPage(index + 1)}
+                                        className={`w-9 h-9 rounded-md transition ${notesPage === index + 1
+                                                ? "bg-blue-600 text-white"
+                                                : "text-gray-700 hover:bg-gray-100"
+                                            }`}
+                                    >
+                                        {index + 1}
+                                    </button>
+                                ))}
+
+                                <button
+                                    onClick={() => setNotesPage(notesPage + 1)}
+                                    disabled={notesPage === notesTotalPages}
+                                    className="px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-100 disabled:text-gray-300 disabled:hover:bg-transparent"
+                                >
+                                    Next →
+                                </button>
+
+                            </div>
                     </>
                     )}
 
@@ -865,7 +904,38 @@ export default function PatientDetails({doctor}) {
                                                 </div>
                                             </div>
                                         ))}
+                                    <div className="flex items-center justify-center gap-1 mt-8 text-sm">
 
+                                            <button
+                                                onClick={() => setLogPage(logPage - 1)}
+                                                disabled={logPage === 1}
+                                                className="px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-100 disabled:text-gray-300 disabled:hover:bg-transparent"
+                                            >
+                                                ← Previous
+                                            </button>
+
+                                            {Array.from({ length: logTotalPages }, (_, index) => (
+                                                <button
+                                                    key={index}
+                                                    onClick={() => setLogPage(index + 1)}
+                                                    className={`w-9 h-9 rounded-md transition ${logPage === index + 1
+                                                        ? "bg-blue-600 text-white"
+                                                        : "text-gray-700 hover:bg-gray-100"
+                                                        }`}
+                                                >
+                                                    {index + 1}
+                                                </button>
+                                            ))}
+
+                                            <button
+                                                onClick={() => setLogPage(logPage + 1)}
+                                                disabled={logPage === logTotalPages}
+                                                className="px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-100 disabled:text-gray-300 disabled:hover:bg-transparent"
+                                            >
+                                                Next →
+                                            </button>
+
+                                        </div>
                                     </div>
                             )}
                         </>
