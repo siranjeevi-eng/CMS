@@ -1,179 +1,342 @@
 import { useForm } from "react-hook-form"
-import { Link } from "react-router-dom"
-import { useState } from "react"
+import { useState, useEffect } from "react";
+import { UserRound, Smile, Hospital, ChevronRight } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom"
+import { getPatientsAPI } from "./services/patientService"
+import { formatDistanceToNow } from "date-fns";
+import toast from "react-hot-toast";
 
-export default function Dashboard({ doctor, addDoctor, docErr, doctorCount, patientCount, patientsAddedToday, patientsAddedThisMonth }){
-    
-    const role = localStorage.getItem("role")
-  
-    const [search, setSearch] = useState("")
+export default function Dashboard({ 
+    doctorCount, 
+    patientCount, 
+    patientsAddedToday, 
+    patientsAddedThisMonth, 
+    underTreatmentPatients, 
+    recoveredPatients, 
+    dischargedPatients
+ }){
 
-    const filterDoctor = doctor.filter((d)=>d.name.toLowerCase().includes(search.toLowerCase()))
+    const navigate = useNavigate()
+    const [patients, setPatients] = useState([])
+    const role = localStorage.getItem("role");
 
-    const {
-        register, 
-        handleSubmit, 
-        formState:{errors}
-        } = useForm()
-
-        function onSubmit(data){
-            addDoctor(data)
+    useEffect(()=>{
+        fetchPatients()
+    },[])
+    async function fetchPatients() {
+        try{
+            const res = await getPatientsAPI("",1,3,"","")
+            setPatients(res.data.patients)
         }
+        catch(err){
+            toast.error("Something went wrong", err.message)
+            console.error(err.message)
+        }
+    }
 
-         
-            
+
     return(
-        
       <> 
             <div className="max-w-7xl mx-auto px-6 py-8">
                 <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-                <input
-                    type="text"
-                    placeholder="Search doctor..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full max-w-md px-4 py-2 mb-6 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <div className="flex flex-wrap gap-4 mb-8">
+            
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
                     {/* Total Doctors */}
-                    <div className="w-56 bg-white rounded-xl shadow-sm border border-gray-200 p-3 flex flex-col items-center justify-center">
-                        <p className="text-sm font-medium text-gray-500">
-                            👨‍⚕️ Total Doctors
-                        </p>
-                        <h2 className="mt-1 text-4xl font-bold text-gray-900">
-                            {doctorCount}
-                        </h2>
-                    </div>
+                    <Link to="/doctors">
+                        <div className="h-30 bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-1 cursor-pointer flex flex-col items-center justify-center">
+                            <p className="text-sm font-medium text-gray-500">
+                                👨‍⚕️ Total Doctors
+                            </p>
+
+                            <h2 className="mt-3 text-4xl font-bold text-gray-900">
+                                {doctorCount}
+                            </h2>
+                        </div>
+                    </Link>
 
                     {/* Total Patients */}
-                    <div className="w-56 bg-white rounded-xl shadow-sm border border-gray-200 p-3 flex flex-col items-center justify-center">
-                        <p className="text-sm font-medium text-gray-500">
-                            🧑 Total Patients
-                        </p>
-                        <h2 className="mt-1 text-4xl font-bold text-gray-900">
-                            {patientCount}
-                        </h2>
-                    </div>
+                    <Link to="/patients">
+                        <div className="h-30 bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-1 cursor-pointer flex flex-col items-center justify-center">
+                            <p className="text-sm font-medium text-gray-500">
+                                🧑 Total Patients
+                            </p>
+
+                            <h2 className="mt-3 text-4xl font-bold text-gray-900">
+                                {patientCount}
+                            </h2>
+                        </div>
+                    </Link>
+
                     {/* Patients Added Today */}
-                    <div className="w-56 bg-white rounded-xl shadow-sm border border-gray-200 p-3 flex flex-col items-center justify-center">
+                    <div
+                        onClick={() => navigate("/patients?filter=today")}
+                        className="h-30 bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-1 cursor-pointer flex flex-col items-center justify-center"
+                    >
                         <p className="text-sm font-medium text-gray-500">
                             🧑 Patients Added Today
                         </p>
-                        <h2 className="mt-1 text-4xl font-bold text-gray-900">
+
+                        <h2 className="mt-3 text-4xl font-bold text-gray-900">
                             {patientsAddedToday}
                         </h2>
                     </div>
-                    {/* Patients Added this month */}
-                    <div className="w-56 bg-white rounded-xl shadow-sm border border-gray-200 p-3 flex flex-col items-center justify-center">
+
+                    {/* Patients Added This Month */}
+                    <div
+                        onClick={() => navigate("/patients?filter=month")}
+                        className="h-30 bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-1 cursor-pointer flex flex-col items-center justify-center"
+                    >
                         <p className="text-sm font-medium text-gray-500">
                             🧑 Patients Added This Month
                         </p>
-                        <h2 className="mt-1 text-4xl font-bold text-gray-900">
+
+                        <h2 className="mt-3 text-4xl font-bold text-gray-900">
                             {patientsAddedThisMonth}
                         </h2>
                     </div>
+
                 </div>
-                {filterDoctor.length === 0 ? (
-                    <p>No Doctors found...</p>
-                ) : (<div className="grid lg:grid-cols-3 gap-8">
-
-                    <div className="lg:col-span-2">
-                        <h2 className="text-xl font-semibold mb-4">Doctors</h2>
-                        <div className="grid md:grid-cols-2 mb-4 gap-4">
-                            {filterDoctor.map((d) => (
-                                <div key={d._id} className="bg-white p-3 rounded-lg shadow mb-4 hover:shadow-lg transition cursor-pointer">
-                                    <Link
-
-                                        to={`/doctor/${d._id}`}
-                                        className="text-black-600 hover:text-gray-500"
-                                    >
-                                        <div>
-                                            <h3 className="text-l font-semibold mb-3">
-                                                Dr. {d.name}
-                                            </h3>
-                                        </div>
-                                    </Link>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    {docErr && (
-                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
-                            {docErr}
-                        </div>
-                    )}
-                    {role === "admin" && (
-                        <form onSubmit={handleSubmit(onSubmit)}
-                            className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-md space-y-4 mt-8"
-                        >
-                            <h2 className="text-xl font-semibold mb-4">Add Doctor</h2>
-                            <input
-                                id="name"
-                                type="text"
-                                placeholder="Enter Doctor name"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-
-                                {...register("name", {
-                                    required: "Doctor name is required"
-                                })}
-                            />
-
-                            {errors.name &&
-                                <p className="text-red-500 text-sm">
-                                    {errors.name.message}
-                                </p>}
-
-                            <input
-                                id="email"
-                                type="email"
-                                placeholder="Enter Doctor's email"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                {...register("email", {
-                                    required: "Doctor's email is required"
-                                })}
-                            />
-                            {errors.email &&
-                                <p className="text-red-500 text-sm">
-                                    {errors.email.message}
-                                </p>}
-
-                            <input
-                                id="specialization"
-                                type="text"
-                                placeholder="Enter the specialization"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                {...register("specialization", {
-                                    required: "Specialization is required"
-                                })}
-                            />
-                            {errors.specialization &&
-                                <p className="text-red-500 text-sm">
-                                    {errors.specialization.message}
-                                </p>}
-
-                            <input
-                                id="experience"
-                                type="number"
-                                placeholder="Experience"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                min={0}
-                                {...register("experience", {
-                                    required: "Experience is required"
-                                })}
-                            />
-                            {errors.experience &&
-                                <p className="text-red-500 text-sm">
-                                    {errors.experience.message}
-                                </p>}
-
-
-                            <button className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition"
-                                type="submit">Add</button>
-                        </form>)}
-                </div>)}
                 
-                    
-        </div>          
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+                    {/* Patient Status */}
+                    <div className="bg-white rounded-2xl shadow-md p-6">
+
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-2xl font-bold text-gray-900">
+                                Patient Status
+                            </h2>
+
+                            <button
+                                onClick={() => navigate("/patients")}
+                                className="flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700 transition"
+                            >
+                                View All
+                                <ChevronRight size={18} />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+
+                            <div
+                                onClick={() => navigate("/patients?status=under_treatment")}
+                                className="flex justify-between items-center p-5 rounded-2xl bg-green-50 border border-green-100 cursor-pointer hover:bg-green-100 transition-all duration-200"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="bg-green-100 p-3 rounded-full">
+                                        <Hospital className="w-6 h-6 text-green-600" />
+                                    </div>
+
+                                    <div>
+                                        <h3 className="font-semibold text-green-700">
+                                            Under Treatment
+                                        </h3>
+
+                                        <p className="text-sm text-gray-500">
+                                            Patients currently under treatment
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <span className="text-3xl font-bold text-green-600">
+                                        {underTreatmentPatients}
+                                    </span>
+
+                                    <ChevronRight className="text-green-600" />
+                                </div>
+                            </div>
+
+                            <div
+                                onClick={() => navigate("/patients?status=recovered")}
+                                className="flex justify-between items-center p-5 rounded-2xl bg-yellow-50 border border-yellow-100 cursor-pointer hover:bg-yellow-100 transition-all duration-200"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="bg-yellow-100 p-3 rounded-full">
+                                        <Smile className="w-6 h-6 text-yellow-600" />
+                                    </div>
+
+                                    <div>
+                                        <h3 className="font-semibold text-yellow-700">
+                                            Recovered
+                                        </h3>
+
+                                        <p className="text-sm text-gray-500">
+                                            Patients who have recovered
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <span className="text-3xl font-bold text-yellow-600">
+                                        {recoveredPatients}
+                                    </span>
+
+                                    <ChevronRight className="text-yellow-600" />
+                                </div>
+                            </div>
+
+                            <div
+                                onClick={() => navigate("/patients?status=discharged")}
+                                className="flex justify-between items-center p-5 rounded-2xl bg-blue-50 border border-blue-100 cursor-pointer hover:bg-blue-100 transition-all duration-200"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="bg-blue-100 p-3 rounded-full">
+                                        <UserRound className="w-6 h-6 text-blue-600" />
+                                    </div>
+
+                                    <div>
+                                        <h3 className="font-semibold text-blue-700">
+                                            Discharged
+                                        </h3>
+
+                                        <p className="text-sm text-gray-500">
+                                            Patients successfully discharged
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <span className="text-3xl font-bold text-blue-600">
+                                        {dischargedPatients}
+                                    </span>
+
+                                    <ChevronRight className="text-blue-600" />
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    {/* Recent Patients */}
+
+                    <div className="bg-white rounded-2xl shadow-md p-6">
+
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-2xl font-bold text-gray-900">
+                                Recent Patients
+                            </h2>
+
+                            <button
+                                onClick={() => navigate("/patients")}
+                                className="flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700 transition"
+                            >
+                                View All
+                                <ChevronRight size={18} />
+                            </button>
+                        </div>
+
+                        <div className="divide-y divide-gray-100">
+
+                            {patients.length === 0 ? (
+                                <p className="text-gray-500 py-6 text-center">
+                                    No patients found.
+                                </p>
+                            ) : (
+                                patients.slice(0, 5).map((patient) => (
+                                    <div
+                                        key={patient._id}
+                                        onClick={() => navigate(`/patient/${patient._id}`)}
+                                        className="flex items-center justify-between py-4 hover:bg-gray-50 rounded-lg px-2 cursor-pointer transition"
+                                    >
+                                        <div className="flex items-center gap-4">
+
+                                            <div className="w-11 h-11 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center">
+                                                {patient.patientInfo.name.charAt(0).toUpperCase()}
+                                            </div>
+
+                                            <div className="flex-1 ml-4">
+                                                <h3 className="font-semibold text-gray-900">
+                                                    {patient.patientInfo.name}
+                                                </h3>
+
+                                                <p className="text-sm text-gray-500">
+                                                    Age: {patient.patientInfo.age} •{" "}
+                                                    {patient.patientInfo.gender.charAt(0).toUpperCase() +
+                                                        patient.patientInfo.gender.slice(1)}
+                                                </p>
+
+                                                <p className="text-xs text-gray-400 mt-1">
+                                                    {formatDistanceToNow(new Date(patient.createdAt), {
+                                                        addSuffix: true,
+                                                    }).replace("about ", "")}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <ChevronRight className="text-gray-400" />
+                                    </div>
+                                ))
+                            )}
+
+                        </div>
+
+                    </div>
+
+                </div>
+               
+                <div className="bg-white rounded-2xl shadow-md p-6">
+                    <h2 className="text-2xl font-bold text-center mb-6">
+                        Quick Actions
+                    </h2>
+
+                    <div className="flex flex-wrap justify-center gap-6">
+
+                        <Link
+                            to="/patient/add"
+                            className="w-80 flex justify-between items-center p-5 rounded-xl bg-blue-50 border border-blue-100 hover:bg-blue-100 hover:shadow-md transition-all duration-200"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="bg-blue-100 p-3 rounded-full">
+                                    <UserRound className="w-6 h-6 text-blue-600" />
+                                </div>
+
+                                <div>
+                                    <h3 className="font-semibold text-blue-700">
+                                        Add Patient
+                                    </h3>
+
+                                    <p className="text-sm text-gray-500">
+                                        Register a new patient
+                                    </p>
+                                </div>
+                            </div>
+
+                            <ChevronRight className="text-blue-600" />
+                        </Link>
+
+                        {role === "admin" && (
+                            <Link
+                                to="/doctor/add"
+                                className="w-80 flex justify-between items-center p-5 rounded-xl bg-green-50 border border-green-100 hover:bg-green-100 hover:shadow-md transition-all duration-200"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="bg-green-100 p-3 rounded-full">
+                                        <Hospital className="w-6 h-6 text-green-600" />
+                                    </div>
+
+                                    <div>
+                                        <h3 className="font-semibold text-green-700">
+                                            Add Doctor
+                                        </h3>
+
+                                        <p className="text-sm text-gray-500">
+                                            Create a new doctor account
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <ChevronRight className="text-green-600" />
+                            </Link>
+                        )}
+
+                    </div>
+                </div>
+
+                </div>
+                 
         </>
         
     )

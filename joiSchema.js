@@ -26,7 +26,7 @@ const Joi = BaseJoi.extend(extension);
 module.exports.docSchema = Joi.object({
     name: Joi.string().trim().required().escapeHTML(),
     email: Joi.string().email().lowercase().trim().required().escapeHTML(),
-    specialization: Joi.string().trim().required().escapeHTML(),
+    specialization: Joi.string().trim().lowercase().required().escapeHTML(),
     experience: Joi.number().integer().min(0).required()
 }).required().unknown(false);
 

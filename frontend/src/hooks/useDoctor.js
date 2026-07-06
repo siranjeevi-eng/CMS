@@ -10,6 +10,10 @@ export default function useDocotor(){
     const [patientCount, setPatientCount] = useState(0);
     const [patientsAddedToday, setPatientsAddedToday] = useState(0);
     const [patientsAddedThisMonth, setPatientsAddedThisMonth] = useState(0);
+    const [underTreatmentPatients, setUnderTreatmentPatients] = useState(0);
+    const [recoveredPatients, setRecoveredPatients] = useState(0);
+    const [dischargedPatients, setDischargedPatients] = useState(0);
+
 
     const fetchDoctor = async function (){
             try{
@@ -19,6 +23,9 @@ export default function useDocotor(){
                 setPatientCount(response.data.totalPatients);
                 setPatientsAddedToday(response.data.patientsAddedToday);
                 setPatientsAddedThisMonth(response.data.patientsAddedThisMonth);
+                setUnderTreatmentPatients(response.data.underTreatmentPatients);
+                setRecoveredPatients(response.data.recoveredPatients);
+                setDischargedPatients(response.data.dischargedPatients);
             }catch(err){
                 setDocErr(err.message)
             }
@@ -42,6 +49,6 @@ export default function useDocotor(){
 
     
 
-    return { docErr, doctor, addDoctor, doctorCount, patientCount, patientsAddedToday, patientsAddedThisMonth}
+    return { docErr, doctor, addDoctor, doctorCount, patientCount, patientsAddedToday, patientsAddedThisMonth, underTreatmentPatients, recoveredPatients, dischargedPatients}
 
 }

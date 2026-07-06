@@ -20,7 +20,7 @@ module.exports.addDoctor = async(req,res)=>{
 
 module.exports.getDoctors = async(req,res)=>{
     try{
-        const doctors = await Doctor.find();
+        const doctors = await Doctor.find().sort({specialization: 1, name: 1});
         const totalDoctors = await Doctor.countDocuments();
         const totalPatients = await Patient.countDocuments();
 
@@ -49,7 +49,23 @@ module.exports.getDoctors = async(req,res)=>{
             createdAt: {$gte: startOfToday,
             $lt: startOfTomorrow} 
         })
-        res.status(200).json({doctors, totalDoctors, totalPatients, patientsAddedToday, patientsAddedThisMonth})
+         
+        const underTreatmentPatients = await Patient.countDocuments({
+            "medicalRecord.status": "under_treatment"});
+        const recoveredPatients = await Patient.countDocuments({
+            "medicalRecord.status": "recovered"});
+        const dischargedPatients = await Patient.countDocuments({
+            "medicalRecord.status": "discharged"});
+
+        res.status(200).json({
+            doctors, 
+            totalDoctors, 
+            totalPatients, 
+            patientsAddedToday, 
+            patientsAddedThisMonth, 
+            underTreatmentPatients, 
+            recoveredPatients, 
+            dischargedPatients})
     }catch(err){
         res.status(500).json({message: 'Internal server error'})
     }
@@ -62,12 +78,14 @@ module.exports.showDoctor = async(req,res)=>{
         if(!doctor){
             return res.status(404).json({message: 'Doctor not found'})
         }
-        res.status(200).json({doctor})
+
+        const patients = await Patient.find({ "medicalRecord.doctorAssigned": id });
+        res.status(200).json({doctor, patients})
     }catch(err){
         if(err.name==="CastError" && err.path === '_id'){
             return res.status(400).json({message: "Invalid ID"})
         }
-        res.status(500).json({message: 'Internal server error'})
+        res.status(500).json({message: 'Internal server error', error: err.message})
     }
 }
 

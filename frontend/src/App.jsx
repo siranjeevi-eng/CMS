@@ -6,6 +6,7 @@ import Signup from './Signup'
 import Login from './Login'
 import Home from './Home'
 import Dashboard from './Dashboard'
+import ShowDoctors from './ShowDoctors';
 import Layout from './layouts/layout'
 import useUser from './hooks/useUser'
 import useDocotor from './hooks/useDoctor'
@@ -21,7 +22,18 @@ import NotFound from './NotFound'
 
 function App() {
   const {insertUser, LoginUser,logout} = useUser()
-  const { doctor, addDoctor, docErr, doctorCount, patientCount, patientsAddedToday, patientsAddedThisMonth } = useDocotor()
+  const { 
+    doctor, 
+    addDoctor, 
+    docErr, 
+    doctorCount, 
+    patientCount, 
+    patientsAddedToday, 
+    patientsAddedThisMonth,
+    underTreatmentPatients,
+    recoveredPatients,
+    dischargedPatients
+  } = useDocotor()
 
   return (
     <>
@@ -61,10 +73,22 @@ function App() {
                 patientCount = {patientCount}
                 patientsAddedToday = {patientsAddedToday}
                 patientsAddedThisMonth={patientsAddedThisMonth}
+                underTreatmentPatients = {underTreatmentPatients}
+                recoveredPatients = {recoveredPatients}
+                dischargedPatients = {dischargedPatients}
                 addDoctor={addDoctor}
                 docErr={docErr}
               />
             }
+          />
+          <Route
+            path='/doctors'
+            element={<ShowDoctors
+              addDoctor={addDoctor}
+              doctorCount={doctorCount}
+              docErr={docErr}
+              doctor={doctor}
+            />}
           />
 
           <Route

@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 export default function Navbar({logout}){
+
+    const role = localStorage.getItem('role');
     return (
         <nav className="bg-blue-900 shadow-md">
             <div className="max-w-8xl mx-auto px-6 py-4 flex justify-between items-center">
@@ -14,13 +16,26 @@ export default function Navbar({logout}){
                     >
                         Dashboard
                     </Link>
-
+                    <Link
+                        to="/doctors"
+                        className="text-white hover:text-blue-600 font-medium"
+                    >
+                        Doctors
+                    </Link>
                     <Link
                         to="/patients"
                         className="text-white hover:text-blue-600 font-medium"
                     >
                         Patients
                     </Link>
+                    {role === "doctor" && (
+                        <Link
+                            to="/patients?mine=true"
+                            className="text-white hover:text-gray-200 font-medium"
+                        >
+                            My Patients
+                        </Link>
+                    )}
                 </div>
 
                 <button

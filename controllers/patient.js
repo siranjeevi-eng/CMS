@@ -1,4 +1,5 @@
 const Patient = require('../models/patient')
+const Doctor = require('../models/doctor')
 const Log = require('../models/log')
 
 module.exports.addPatient = async(req,res)=>{
@@ -33,19 +34,58 @@ module.exports.addPatient = async(req,res)=>{
 module.exports.getPatients = async(req,res)=>{
     try{
         const search = req.query.search || '';
+        const filter = req.query.filter || '';
+        const status = req.query.status || '';
+        const mine = req.query.mine || '';
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 10;
 
-        const filter = search 
+
+        const loggedInDoctor = await Doctor.findOne({ userId:req.user.id});
+        const query = search 
         ?{  "patientInfo.name": {  $regex: search, $options: "i"}}
         :{};
 
-        const patients = await Patient.find(filter)
+        if(status){
+            query["medicalRecord.status"] = status;
+        }
+        if(mine){
+            query["medicalRecord.doctorAssigned"] = loggedInDoctor._id;
+        }
+
+        if (filter === "today") {
+            const startOfToday = new Date();
+            startOfToday.setHours(0, 0, 0, 0);
+
+            const startOfTomorrow = new Date(startOfToday);
+            startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+
+            query.createdAt = {
+                $gte: startOfToday,
+                $lt: startOfTomorrow
+            };
+        }
+
+        if (filter === "month") {
+            const startOfMonth = new Date();
+            startOfMonth.setDate(1);
+            startOfMonth.setHours(0, 0, 0, 0);
+
+            const startOfNextMonth = new Date(startOfMonth);
+            startOfNextMonth.setMonth(startOfNextMonth.getMonth() + 1);
+
+            query.createdAt = {
+                $gte: startOfMonth,
+                $lt: startOfNextMonth
+            };
+        }
+        const patients = await Patient.find(query)
+      
         .populate('medicalRecord.doctorAssigned')
         .skip((page-1)*limit)
         .limit(limit)
-
-        const totalPatients = await Patient.countDocuments(filter)
+        .sort({createdAt: -1});
+        const totalPatients = await Patient.countDocuments(query)
 
         res.status(200).json({ 
             patients,
