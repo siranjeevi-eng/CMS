@@ -309,7 +309,7 @@ export default function Dashboard({
 
                         {role === "admin" && (
                             <Link
-                                to="/doctor/add"
+                                to="/doctors"
                                 className="w-80 flex justify-between items-center p-5 rounded-xl bg-green-50 border border-green-100 hover:bg-green-100 hover:shadow-md transition-all duration-200"
                             >
                                 <div className="flex items-center gap-4">
@@ -319,11 +319,11 @@ export default function Dashboard({
 
                                     <div>
                                         <h3 className="font-semibold text-green-700">
-                                            Add Doctor
+                                            All Doctors
                                         </h3>
 
                                         <p className="text-sm text-gray-500">
-                                            Create a new doctor account
+                                            Show all available doctors
                                         </p>
                                     </div>
                                 </div>

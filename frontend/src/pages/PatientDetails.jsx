@@ -288,6 +288,7 @@ export default function PatientDetails({doctor}) {
             setEditingNoteId(null)
             toast.success("Note updated successfully");
             fetchNotes()
+            getLog();
         }
         catch(err){
             console.error("Failed to update note:", err);

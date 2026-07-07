@@ -4,6 +4,9 @@ const app = express();
 const mongoose = require('mongoose');
 const cors = require('cors')
 const bodyParser = require('body-parser')
+const mongoSanitize = require("express-mongo-sanitize");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 const userRoutes = require('./routes/user')
 const doctorRoutes = require('./routes/doctor')
 const patientRoutes = require('./routes/patient')
@@ -12,25 +15,48 @@ const attachementRoutes = require('./routes/attachement')
 const logRoute = require('./routes/log')
 const ExpressError = require('./utils/ExpressError')
 
-
+const PORT = process.env.PORT || 4000;
 
 mongoose.connect(process.env.URL)
 
 app.use(cors({
-    origin:"http://localhost:5173",
+    origin:process.env.CLIENT_URL,
     methods:["GET","POST","PUT","DELETE"],
     allowedHeaders:["Content-Type","Authorization"]
 }))
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use((req, res, next) => {
+    mongoSanitize.sanitize(req.body);
+    mongoSanitize.sanitize(req.query);
+    mongoSanitize.sanitize(req.params);
+    next();
+});
+app.use(helmet())
 
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 5,
+    message: {
+        message: "Too many login attempts. Please try again after 15 minutes."
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
-app.use('/cms/auth', userRoutes)
-app.use('/cms/doctor', doctorRoutes)
-app.use('/cms/patient', patientRoutes)
-app.use('/cms/patient/:patientId/note', noteRoutes)
-app.use('/cms/patient/:patientId/attachment', attachementRoutes)
-app.use('/cms/patient/:patientId', logRoute)
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+app.use('/cms/auth', authLimiter, userRoutes)
+app.use('/cms/doctor', apiLimiter, doctorRoutes)
+app.use('/cms/patient', apiLimiter, patientRoutes)
+app.use('/cms/patient/:patientId/note', apiLimiter, noteRoutes)
+app.use('/cms/patient/:patientId/attachment', apiLimiter, attachementRoutes)
+app.use('/cms/patient/:patientId', apiLimiter, logRoute)
 app.all(/(.*)/, (req, res, next) => {
     next(new ExpressError('Page Not Found', 404));
 });
@@ -41,6 +67,6 @@ app.use((err, req, res, next) => {
     res.status(statusCode).json({ message });
 });
 
-app.listen(4000, ()=>{
+app.listen(PORT, ()=>{
     console.log("Application is up and running")
 })
