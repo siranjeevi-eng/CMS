@@ -7,7 +7,7 @@ import Login from './Login'
 import Home from './Home'
 import Dashboard from './Dashboard'
 import ShowDoctors from './ShowDoctors';
-import Layout from './layouts/layout'
+import Layout from './layouts/Layout'
 import useUser from './hooks/useUser'
 import useDocotor from './hooks/useDoctor'
 import DoctorDetails from './DoctorDetails'
