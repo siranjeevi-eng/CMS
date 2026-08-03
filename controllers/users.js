@@ -41,7 +41,12 @@ module.exports.registerUser = async(req,res, next)=>{
                 )
                 res.status(201).json({
                     message: "User created successfully",
-                    user,
+                    user: { 
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role
+                },
                     token
                 })
             }
@@ -71,7 +76,12 @@ module.exports.registerUser = async(req,res, next)=>{
                 )
                 res.status(201).json({
                     message: "User created successfully",
-                    user,
+                    user: {
+                        id: user._id,
+                        name: user.name,
+                        email: user.email,
+                        role: user.role
+                    },
                     token
                 })
             }

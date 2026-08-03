@@ -7,8 +7,6 @@ module.exports.addPatient = async(req,res)=>{
       
 
     try{
-        console.log(req.user)
-        console.log(req.user._id)
         const { email } = patientInfo
 
         const existingPatient = await Patient.findOne({ "patientInfo.email": email })
@@ -80,7 +78,6 @@ module.exports.getPatients = async(req,res)=>{
             };
         }
         const patients = await Patient.find(query)
-      
         .populate('medicalRecord.doctorAssigned')
         .skip((page-1)*limit)
         .limit(limit)

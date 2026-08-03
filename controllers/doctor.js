@@ -46,8 +46,9 @@ module.exports.getDoctors = async(req,res)=>{
         })
 
         const patientsAddedToday = await Patient.countDocuments({
-            createdAt: {$gte: startOfToday,
-            $lt: startOfTomorrow} 
+            createdAt: {
+                $gte: startOfToday,
+                $lt: startOfTomorrow} 
         })
          
         const underTreatmentPatients = await Patient.countDocuments({
