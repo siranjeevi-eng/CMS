@@ -4,7 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "tsx app.js"
   },
   "keywords": [],
   "author": "",
@@ -25,5 +25,11 @@
     "multer-storage-cloudinary": "^4.0.0",
     "sanitize-html": "^2.17.3",
     "streamifier": "^0.1.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.1.2",
+    "tsx": "^4.23.8",
+    "typescript": "^7.0.2"
   }
 }
