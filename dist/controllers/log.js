@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Log = require('../models/log');
-module.exports.getLogs = async (req, res) => {
+module.exports.getLogs = async (req, res, next) => {
     const { patientId } = req.params;
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 5;
@@ -19,16 +19,7 @@ module.exports.getLogs = async (req, res) => {
         });
     }
     catch (err) {
-        if (err instanceof Error) {
-            return res.status(500).json({
-                message: "Internal server error",
-                error: err.message
-            });
-        }
-        return res.status(500).json({
-            message: "Something went wrong",
-            error: "Unknown error"
-        });
+        next(err);
     }
 };
 //# sourceMappingURL=log.js.map

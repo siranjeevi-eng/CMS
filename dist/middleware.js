@@ -1,8 +1,12 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.errorHandler = void 0;
 const jwt = require('jsonwebtoken');
 const { docSchema, patientSchema, noteSchema } = require('./joiSchema');
-const ExpressError = require('./utils/ExpressError');
+const ExpressError_1 = __importDefault(require("./utils/ExpressError"));
 module.exports.authMiddleware = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -32,6 +36,18 @@ module.exports.authMiddleware = (req, res, next) => {
         });
     }
 };
+const errorHandler = (err, req, res, next) => {
+    if (err instanceof ExpressError_1.default) {
+        return res.status(err.statusCode).json({
+            message: err.message
+        });
+    }
+    return res.status(500).json({
+        message: "Internal server error",
+        error: err.message
+    });
+};
+exports.errorHandler = errorHandler;
 module.exports.authorizeRoles = (...roles) => {
     return (req, res, next) => {
         if (!roles.includes(req.user.role)) {
@@ -46,7 +62,7 @@ module.exports.validateDoc = (req, res, next) => {
     const { error, value } = docSchema.validate(req.body);
     if (error) {
         const msg = error.details.map((el) => el.message).join(', ');
-        return next(new ExpressError(msg, 400));
+        return next(new ExpressError_1.default(msg, 400));
     }
     req.body = value;
     next();
@@ -55,7 +71,7 @@ module.exports.validatePatient = (req, res, next) => {
     const { error, value } = patientSchema.validate(req.body);
     if (error) {
         const msg = error.details.map((el) => el.message).join(', ');
-        return next(new ExpressError(msg, 400));
+        return next(new ExpressError_1.default(msg, 400));
     }
     req.body = value;
     next();
@@ -64,7 +80,7 @@ module.exports.validateNote = (req, res, next) => {
     const { error, value } = noteSchema.validate(req.body);
     if (error) {
         const msg = error.details.map((el) => el.message).join(', ');
-        return next(new ExpressError(msg, 400));
+        return next(new ExpressError_1.default(msg, 400));
     }
     req.body = value;
     next();

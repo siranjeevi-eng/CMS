@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { Request, Response, NextFunction } from 'express'
 const Log = require('../models/log')
 
 interface LogParams{
@@ -9,7 +9,7 @@ interface LogQuery{
     page?: string;
     limit?:string;
 }
-module.exports.getLogs = async(req: Request<LogParams,{},{}, LogQuery>,res: Response)=>{
+module.exports.getLogs = async(req: Request<LogParams,{},{}, LogQuery>,res: Response, next: NextFunction)=>{
     const {patientId} = req.params;
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 5;
@@ -30,15 +30,6 @@ module.exports.getLogs = async(req: Request<LogParams,{},{}, LogQuery>,res: Resp
     }
     
     catch (err) {
-        if (err instanceof Error) {
-            return res.status(500).json({
-                message: "Internal server error",
-                error: err.message
-            })
-        }
-        return res.status(500).json({
-            message: "Something went wrong",
-            error: "Unknown error"
-        });
+        next(err)
     }
 }

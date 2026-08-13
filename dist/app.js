@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 require("dotenv").config();
 const express = require('express');
@@ -11,11 +14,13 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const userRoutes = require('./routes/user');
 const doctorRoutes = require('./routes/doctor');
+const dashBoardRoute = require('./routes/dashboard');
 const patientRoutes = require('./routes/patient');
 const noteRoutes = require('./routes/notes');
 const attachementRoutes = require('./routes/attachement');
 const logRoute = require('./routes/log');
-const ExpressError = require('./utils/ExpressError');
+const middleware_1 = require("./middleware");
+const ExpressError_1 = __importDefault(require("./utils/ExpressError"));
 const PORT = process.env.PORT || 4000;
 mongoose.connect(process.env.URL);
 app.use(cors({
@@ -48,18 +53,16 @@ const apiLimiter = rateLimit({
     legacyHeaders: false,
 });
 app.use('/cms/auth', authLimiter, userRoutes);
+app.use('/cms/dashboard', apiLimiter, dashBoardRoute);
 app.use('/cms/doctor', apiLimiter, doctorRoutes);
 app.use('/cms/patient', apiLimiter, patientRoutes);
 app.use('/cms/patient/:patientId/note', apiLimiter, noteRoutes);
 app.use('/cms/patient/:patientId/attachment', apiLimiter, attachementRoutes);
 app.use('/cms/patient/:patientId', apiLimiter, logRoute);
 app.all(/(.*)/, (req, res, next) => {
-    next(new ExpressError('Page Not Found', 404));
+    next(new ExpressError_1.default('Page Not Found', 404));
 });
-app.use((err, req, res, next) => {
-    const { statusCode = 500, message = 'Internal Server Error' } = err;
-    res.status(statusCode).json({ message });
-});
+app.use(middleware_1.errorHandler);
 app.listen(PORT, () => {
     console.log("Application is up and running");
 });

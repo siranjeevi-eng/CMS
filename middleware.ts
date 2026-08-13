@@ -2,12 +2,12 @@ import {Request, Response, NextFunction} from 'express'
 import Joi from "joi";
 const jwt = require('jsonwebtoken')
 const { docSchema, patientSchema, noteSchema } = require('./joiSchema')
-const ExpressError = require('./utils/ExpressError')
+import ExpressError from "./utils/ExpressError";
 import { Role } from './models/user'
 
 module.exports.authMiddleware = (req: Request,res: Response,next: NextFunction)=>{
    
-    const authHeader = req.headers.authorization          
+    const authHeader = req.headers.authorization      
     if(!authHeader){
         return res.status(401).json({message: 'Unauthorized'})  
     }
@@ -35,6 +35,18 @@ module.exports.authMiddleware = (req: Request,res: Response,next: NextFunction)=
             error: "Unknown error"
         });
     }
+}
+
+export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction)=>{
+    if(err instanceof ExpressError){
+        return res.status(err.statusCode).json({
+            message: err.message
+        });
+    }
+    return res.status(500).json({
+        message: "Internal server error",
+        error: err.message
+    });
 }
 
 module.exports.authorizeRoles = (...roles: Role[])=>{

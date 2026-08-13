@@ -10,11 +10,14 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const userRoutes = require('./routes/user')
 const doctorRoutes = require('./routes/doctor')
+const dashBoardRoute = require('./routes/dashboard')
 const patientRoutes = require('./routes/patient')
 const noteRoutes = require('./routes/notes') 
 const attachementRoutes = require('./routes/attachement')  
 const logRoute = require('./routes/log')
-const ExpressError = require('./utils/ExpressError')
+import { errorHandler } from "./middleware";
+import ExpressError from './utils/ExpressError'
+
 
 const PORT = process.env.PORT || 4000;
 
@@ -53,6 +56,7 @@ const apiLimiter = rateLimit({
 });
 
 app.use('/cms/auth', authLimiter, userRoutes)
+app.use('/cms/dashboard', apiLimiter, dashBoardRoute)
 app.use('/cms/doctor', apiLimiter, doctorRoutes)
 app.use('/cms/patient', apiLimiter, patientRoutes)
 app.use('/cms/patient/:patientId/note', apiLimiter, noteRoutes)
@@ -63,10 +67,7 @@ app.all(/(.*)/, (req: Request, res: Response, next: NextFunction) => {
 });
 
 
-app.use((err: ExpressError, req: Request, res: Response, next: NextFunction) => {
-    const { statusCode = 500, message = 'Internal Server Error' } = err;
-    res.status(statusCode).json({ message });
-});
+app.use(errorHandler);
 
 app.listen(PORT, ()=>{
     console.log("Application is up and running")

@@ -5,8 +5,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const Doctor = require('../models/doctor');
 const Patient = require('../models/patient');
+const ExpressError = require('../utils/ExpressError');
 const mongoose_1 = __importDefault(require("mongoose"));
-module.exports.addDoctor = async (req, res) => {
+module.exports.addDoctor = async (req, res, next) => {
     const { name, email, specialization, experience } = req.body;
     try {
         const existingDoctor = await Doctor.findOne({ email });
@@ -17,78 +18,21 @@ module.exports.addDoctor = async (req, res) => {
         return res.status(201).json({ message: 'Doctor added successfully', doctor });
     }
     catch (err) {
-        if (err instanceof Error) {
-            return res.status(500).json({
-                message: "Internal server error",
-                error: err.message
-            });
-        }
-        return res.status(500).json({
-            message: "Something went wrong",
-            error: "Unknown error"
-        });
+        next(err);
     }
 };
-module.exports.getDoctors = async (req, res) => {
+module.exports.getDoctors = async (req, res, next) => {
     try {
         const doctors = await Doctor.find().sort({ specialization: 1, name: 1 });
-        const totalDoctors = await Doctor.countDocuments();
-        const totalPatients = await Patient.countDocuments();
-        const startOfToday = new Date();
-        startOfToday.setHours(0, 0, 0, 0);
-        const startOfTomorrow = new Date(startOfToday);
-        startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
-        const startOfMonth = new Date();
-        startOfMonth.setDate(1);
-        startOfMonth.setHours(0, 0, 0, 0);
-        const startOfNextMonth = new Date(startOfMonth);
-        startOfNextMonth.setMonth(startOfNextMonth.getMonth() + 1);
-        const patientsAddedThisMonth = await Patient.countDocuments({
-            createdAt: {
-                $gte: startOfMonth,
-                $lt: startOfNextMonth
-            }
-        });
-        const patientsAddedToday = await Patient.countDocuments({
-            createdAt: {
-                $gte: startOfToday,
-                $lt: startOfTomorrow
-            }
-        });
-        const underTreatmentPatients = await Patient.countDocuments({
-            "medicalRecord.status": "under_treatment"
-        });
-        const recoveredPatients = await Patient.countDocuments({
-            "medicalRecord.status": "recovered"
-        });
-        const dischargedPatients = await Patient.countDocuments({
-            "medicalRecord.status": "discharged"
-        });
         res.status(200).json({
-            doctors,
-            totalDoctors,
-            totalPatients,
-            patientsAddedToday,
-            patientsAddedThisMonth,
-            underTreatmentPatients,
-            recoveredPatients,
-            dischargedPatients
+            doctors
         });
     }
     catch (err) {
-        if (err instanceof Error) {
-            return res.status(500).json({
-                message: "Internal server error",
-                error: err.message
-            });
-        }
-        return res.status(500).json({
-            message: "Something went wrong",
-            error: "Unknown error"
-        });
+        next(err);
     }
 };
-module.exports.showDoctor = async (req, res) => {
+module.exports.showDoctor = async (req, res, next) => {
     try {
         const { id } = req.params;
         const doctor = await Doctor.findById(id);
@@ -100,23 +44,12 @@ module.exports.showDoctor = async (req, res) => {
     }
     catch (err) {
         if (err instanceof mongoose_1.default.Error.CastError && err.path === "_id") {
-            return res.status(400).json({
-                message: "Invalid ID"
-            });
+            return next(new ExpressError("Invalid ID", 400));
         }
-        if (err instanceof Error) {
-            return res.status(500).json({
-                message: "Internal server error",
-                error: err.message
-            });
-        }
-        return res.status(500).json({
-            message: "Something went wrong",
-            error: "Unknown error"
-        });
+        next(err);
     }
 };
-module.exports.editDoctor = async (req, res) => {
+module.exports.editDoctor = async (req, res, next) => {
     try {
         const { id } = req.params;
         const { name, email, specialization, experience } = req.body;
@@ -131,23 +64,12 @@ module.exports.editDoctor = async (req, res) => {
     }
     catch (err) {
         if (err instanceof mongoose_1.default.Error.CastError && err.path === "_id") {
-            return res.status(400).json({
-                message: "Invalid ID"
-            });
+            return next(new ExpressError("Invalid ID", 400));
         }
-        if (err instanceof Error) {
-            return res.status(500).json({
-                message: "Internal server error",
-                error: err.message
-            });
-        }
-        return res.status(500).json({
-            message: "Something went wrong",
-            error: "Unknown error"
-        });
+        next(err);
     }
 };
-module.exports.deleteDoctor = async (req, res) => {
+module.exports.deleteDoctor = async (req, res, next) => {
     const { id } = req.params;
     try {
         const doctor = await Doctor.findByIdAndDelete(id);
@@ -157,16 +79,10 @@ module.exports.deleteDoctor = async (req, res) => {
         res.status(200).json({ message: "Doctor removed successfully" });
     }
     catch (err) {
-        if (err instanceof Error) {
-            return res.status(500).json({
-                message: "Internal server error",
-                error: err.message
-            });
+        if (err instanceof mongoose_1.default.Error.CastError && err.path === "_id") {
+            return next(new ExpressError("Invalid ID", 400));
         }
-        return res.status(500).json({
-            message: "Something went wrong",
-            error: "Unknown error"
-        });
+        next(err);
     }
 };
 //# sourceMappingURL=doctor.js.map

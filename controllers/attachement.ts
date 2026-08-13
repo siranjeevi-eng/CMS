@@ -1,17 +1,19 @@
-import {Request, Response} from 'express'
+import {Request, Response, NextFunction} from 'express'
 import { AddNoteParams as AddAttachmentParams} from './notes'
+import mongoose from 'mongoose';
 import type { UploadApiResponse, UploadApiErrorResponse } from "cloudinary";
 const streamifier = require("streamifier");
 const cloudinary = require("../config/cloudinary");
 const Attachment = require('../models/attachments')
 const Patient = require('../models/patient');
 const Log = require('../models/log')
+const ExpressError = require('../utils/ExpressError')
 
 interface AttachmentParams{
     attachmentId: string;
 }
 
-module.exports.createAttachment = async(req: Request<AddAttachmentParams>,res: Response)=>{
+module.exports.createAttachment = async(req: Request<AddAttachmentParams>,res: Response, next: NextFunction)=>{
     const {patientId} = req.params;
 try{
     const patient = await Patient.findById(patientId);
@@ -65,41 +67,23 @@ try{
 }
  
 catch (err) {
-    if (err instanceof Error) {
-        return res.status(500).json({
-            message: "Internal server error",
-            error: err.message
-        })
-    }
-    return res.status(500).json({
-        message: "Something went wrong",
-        error: "Unknown error"
-    });
+    next(err)  
 }
 }
 
-module.exports.getAttachments = async(req: Request<AddAttachmentParams>,res: Response)=>{
+module.exports.getAttachments = async(req: Request<AddAttachmentParams>,res: Response, next: NextFunction)=>{
     const {patientId} = req.params;
     try{
         const attachments = await Attachment.find({ patient: patientId }).populate('uploadedBy')
         res.status(200).json({message: 'Attachments fetched successfully', attachments})
 
     } catch (err) {
-        if (err instanceof Error) {
-            return res.status(500).json({
-                message: "Internal server error",
-                error: err.message
-            })
-        }
-        return res.status(500).json({
-            message: "Something went wrong",
-            error: "Unknown error"
-        });
+       next(err)
     }
 
 }
 
-module.exports.downloadFile = async(req: Request<AttachmentParams>,res: Response)=>{
+module.exports.downloadFile = async(req: Request<AttachmentParams>,res: Response, next: NextFunction)=>{
     const {attachmentId} = req.params;
 
     try{
@@ -115,20 +99,14 @@ module.exports.downloadFile = async(req: Request<AttachmentParams>,res: Response
         res.status(200).json({downloadUrl})
     }
     catch (err) {
-        if (err instanceof Error) {
-            return res.status(500).json({
-                message: "Internal server error",
-                error: err.message
-            })
+    if (err instanceof mongoose.Error.CastError && err.path === "_id") {
+            return next(new ExpressError("Invalid ID", 400));
         }
-        return res.status(500).json({
-            message: "Something went wrong",
-            error: "Unknown error"
-        });
+       next(err)
     }
 }
 
-module.exports.deleteAttachment = async(req: Request<AttachmentParams>,res:Response)=>{
+module.exports.deleteAttachment = async(req: Request<AttachmentParams>,res:Response, next: NextFunction)=>{
     const {attachmentId} = req.params;
     try{
         const attachment = await Attachment.findById(attachmentId)
@@ -151,15 +129,9 @@ module.exports.deleteAttachment = async(req: Request<AttachmentParams>,res:Respo
             message: "Attachment deleted successfully",
         });
     } catch (err) {
-        if (err instanceof Error) {
-            return res.status(500).json({
-                message: "Internal server error",
-                error: err.message
-            })
+        if (err instanceof mongoose.Error.CastError && err.path === "_id") {
+            return next(new ExpressError("Invalid ID", 400));
         }
-        return res.status(500).json({
-            message: "Something went wrong",
-            error: "Unknown error"
-        });
+        next(err)
     }
 }

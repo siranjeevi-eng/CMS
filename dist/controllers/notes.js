@@ -1,10 +1,15 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+const mongoose_1 = __importDefault(require("mongoose"));
 const Notes = require('../models/notes');
 const Patient = require('../models/patient');
 const Doctor = require('../models/doctor');
 const Log = require('../models/log');
-module.exports.addNote = async (req, res) => {
+const ExpressError = require('../utils/ExpressError');
+module.exports.addNote = async (req, res, next) => {
     const { content } = req.body;
     const { patientId } = req.params;
     try {
@@ -34,19 +39,10 @@ module.exports.addNote = async (req, res) => {
         res.status(201).json({ message: 'Note added successfully', note });
     }
     catch (err) {
-        if (err instanceof Error) {
-            return res.status(500).json({
-                message: "Internal server error",
-                error: err.message
-            });
-        }
-        return res.status(500).json({
-            message: "Something went wrong",
-            error: "Unknown error"
-        });
+        next(err);
     }
 };
-module.exports.getNote = async (req, res) => {
+module.exports.getNote = async (req, res, next) => {
     const { patientId } = req.params;
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 5;
@@ -65,19 +61,10 @@ module.exports.getNote = async (req, res) => {
         });
     }
     catch (err) {
-        if (err instanceof Error) {
-            return res.status(500).json({
-                message: "Internal server error",
-                error: err.message
-            });
-        }
-        return res.status(500).json({
-            message: "Something went wrong",
-            error: "Unknown error"
-        });
+        next(err);
     }
 };
-module.exports.editNote = async (req, res) => {
+module.exports.editNote = async (req, res, next) => {
     const { patientId, noteId } = req.params;
     const { content } = req.body;
     try {
@@ -118,16 +105,10 @@ module.exports.editNote = async (req, res) => {
         res.status(200).json({ message: 'Note updated sucessfully', note });
     }
     catch (err) {
-        if (err instanceof Error) {
-            return res.status(500).json({
-                message: "Internal server error",
-                error: err.message
-            });
+        if (err instanceof mongoose_1.default.Error.CastError && err.path === "_id") {
+            return next(new ExpressError("Invalid ID", 400));
         }
-        return res.status(500).json({
-            message: "Something went wrong",
-            error: "Unknown error"
-        });
+        next(err);
     }
 };
 //# sourceMappingURL=notes.js.map

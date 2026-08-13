@@ -1,8 +1,9 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import mongoose, { QueryFilter } from "mongoose";
 const Patient = require('../models/patient')
 const Doctor = require('../models/doctor')
 const Log = require('../models/log')
+const ExpressError = require('../utils/ExpressError')
 import {LogAction} from '../models/log'
 
 interface PatientBody{
@@ -43,7 +44,7 @@ interface LogBody{
     newValue?: string
 }
 
-module.exports.addPatient = async(req: Request<{},{}, PatientBody>,res: Response)=>{
+module.exports.addPatient = async(req: Request<{},{}, PatientBody>,res: Response, next: NextFunction)=>{
     const { patientInfo, medicalRecord } = req.body;
       
 
@@ -66,20 +67,11 @@ module.exports.addPatient = async(req: Request<{},{}, PatientBody>,res: Response
         })
         res.status(201).json({ message: 'Patient added successfully', patient })
     } catch (err) {
-        if (err instanceof Error) {
-            return res.status(500).json({
-                message: "Internal server error",
-                error: err.message
-            })
-        }
-        return res.status(500).json({
-            message: "Something went wrong",
-            error: "Unknown error"
-        });
+       next(err)
     }
 }
 
-module.exports.getPatients = async (req: Request<{}, {}, {}, Query>, res: Response)=>{
+module.exports.getPatients = async (req: Request<{}, {}, {}, Query>, res: Response, next: NextFunction)=>{
     try{
         const search = req.query.search || '';
         const filter = req.query.filter || '';
@@ -141,20 +133,11 @@ module.exports.getPatients = async (req: Request<{}, {}, {}, Query>, res: Respon
             totalPatients
         })
     } catch (err) {
-        if (err instanceof Error) {
-            return res.status(500).json({
-                message: "Internal server error",
-                error: err.message
-            })
-        }
-        return res.status(500).json({
-            message: "Something went wrong",
-            error: "Unknown error"
-        });
+        next(err)
     }
 }
 
-module.exports.showOnePatient = async(req:Request<PatientParams>,res:Response)=>{
+module.exports.showOnePatient = async(req:Request<PatientParams>,res:Response, next: NextFunction)=>{
     const {id} = req.params;
     try{
         const patient = await Patient.findById(id).populate('medicalRecord.doctorAssigned')
@@ -164,27 +147,14 @@ module.exports.showOnePatient = async(req:Request<PatientParams>,res:Response)=>
 
         res.status(200).json({message:"Patient found", patient})
     } catch (err) {
-            if (err instanceof mongoose.Error.CastError && err.path === "_id") {
-                return res.status(400).json({
-                    message: "Invalid ID"
-                });
-            }
-    
-            if (err instanceof Error) {
-                return res.status(500).json({
-                    message: "Internal server error",
-                    error: err.message
-                });
-            }
-    
-            return res.status(500).json({
-                message: "Something went wrong",
-                error: "Unknown error"
-            });
+        if (err instanceof mongoose.Error.CastError && err.path === "_id") {
+            return next(new ExpressError("Invalid ID", 400));
+        }
+            next(err)
         }
 }
 
-module.exports.editPatient = async(req: Request<PatientParams,{},PatientBody>,res: Response)=>{
+module.exports.editPatient = async(req: Request<PatientParams,{},PatientBody>,res: Response, next:NextFunction)=>{
     const {id} = req.params;
     const { patientInfo, medicalRecord } = req.body;
 
@@ -235,20 +205,14 @@ module.exports.editPatient = async(req: Request<PatientParams,{},PatientBody>,re
 
     }
     catch (err) {
-        if (err instanceof Error) {
-            return res.status(500).json({
-                message: "Internal server error",
-                error: err.message
-            })
+        if (err instanceof mongoose.Error.CastError && err.path === "_id") {
+            return next(new ExpressError("Invalid ID", 400));
         }
-        return res.status(500).json({
-            message: "Something went wrong",
-            error: "Unknown error"
-        });
+        next(err)
     }
 }
 
-module.exports.deletePatient = async(req: Request<PatientParams>,res: Response)=>{
+module.exports.deletePatient = async(req: Request<PatientParams>,res: Response, next: NextFunction)=>{
     const {id} = req.params;
     
     try{
@@ -258,16 +222,10 @@ module.exports.deletePatient = async(req: Request<PatientParams>,res: Response)=
         }
         res.status(200).json({ message: "Patient deleted successfully"})
     }catch (err) {
-        if (err instanceof Error) {
-            return res.status(500).json({
-                message: "Internal server error",
-                error: err.message
-            })
+        if (err instanceof mongoose.Error.CastError && err.path === "_id") {
+            return next(new ExpressError("Invalid ID", 400));
         }
-        return res.status(500).json({
-            message: "Something went wrong",
-            error: "Unknown error"
-        });
+        next(err)
     }
 }
 

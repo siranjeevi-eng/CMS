@@ -1,8 +1,11 @@
-import {Request, Response} from 'express'
+import {Request, Response, NextFunction} from 'express'
+import mongoose from 'mongoose'
 const Notes = require('../models/notes')
 const Patient = require('../models/patient')
 const Doctor = require('../models/doctor')
 const Log = require('../models/log')
+
+const ExpressError = require('../utils/ExpressError')
 
 interface NoteBody{
     content: string;
@@ -21,7 +24,7 @@ interface EditNoteParams{
     patientId: string;
     noteId: string;
 }
-module.exports.addNote = async(req: Request<AddNoteParams,{},NoteBody>,res: Response)=>{
+module.exports.addNote = async(req: Request<AddNoteParams,{},NoteBody>,res: Response, next: NextFunction)=>{
     const {content} = req.body;
     const {patientId} = req.params;
         try{
@@ -57,20 +60,11 @@ module.exports.addNote = async(req: Request<AddNoteParams,{},NoteBody>,res: Resp
        
     }
         catch (err) {
-            if (err instanceof Error) {
-                return res.status(500).json({
-                    message: "Internal server error",
-                    error: err.message
-                })
-            }
-            return res.status(500).json({
-                message: "Something went wrong",
-                error: "Unknown error"
-            });
+           next(err)
         }
 }
 
-module.exports.getNote = async(req: Request<AddNoteParams,{},{},NoteQuery>,res: Response)=>{
+module.exports.getNote = async(req: Request<AddNoteParams,{},{},NoteQuery>,res: Response, next: NextFunction)=>{
     const {patientId} = req.params;
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 5;
@@ -90,21 +84,12 @@ module.exports.getNote = async(req: Request<AddNoteParams,{},{},NoteQuery>,res: 
         )
     }
     catch (err) {
-        if (err instanceof Error) {
-            return res.status(500).json({
-                message: "Internal server error",
-                error: err.message
-            })
-        }
-        return res.status(500).json({
-            message: "Something went wrong",
-            error: "Unknown error"
-        });
+        next(err)
     }
 
 } 
 
-module.exports.editNote = async(req: Request<EditNoteParams, {}, NoteBody>,res: Response)=>{
+module.exports.editNote = async(req: Request<EditNoteParams, {}, NoteBody>,res: Response, next: NextFunction)=>{
     const {patientId, noteId} = req.params;
     const {content} = req.body;
 
@@ -148,15 +133,9 @@ module.exports.editNote = async(req: Request<EditNoteParams, {}, NoteBody>,res: 
         }  
         res.status(200).json({ message: 'Note updated sucessfully', note })
     } catch (err) {
-        if (err instanceof Error) {
-            return res.status(500).json({
-                message: "Internal server error",
-                error: err.message
-            })
+        if (err instanceof mongoose.Error.CastError && err.path === "_id") {
+            return next(new ExpressError("Invalid ID", 400));
         }
-        return res.status(500).json({
-            message: "Something went wrong",
-            error: "Unknown error"
-        });
+        next(err)
     }
 }
