@@ -1,12 +1,13 @@
 import {getPatientsAPI} from '../services/patientService'
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-
+import axios from 'axios';
+import type { Patient } from '../services/patientService';
 import {ChevronRight } from "lucide-react";
 
 
 export default function ShowPatients(){
-    const [patient, setPatient] = useState([])
+    const [patient, setPatient] = useState<Patient[]>([])
     const [totalPatients, setTotalPatients] = useState(0)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState("")
@@ -34,8 +35,11 @@ export default function ShowPatients(){
 
             } 
             catch (err) {
-                console.error("Failed to fetch patients:", err);
-                setError(err.response?.data?.message)
+                if (axios.isAxiosError(err)) {
+                    setError(err.response?.data?.message || "Something went wrong");
+                } else {
+                    setError("Something went wrong");
+                }
             }
             finally{
                 setLoading(false)
@@ -51,6 +55,12 @@ export default function ShowPatients(){
 
     return(
         <>
+            {error && (
+                <p className="text-red-500 mb-4">
+                    {error}
+                </p>
+            )}
+            
             <input
                 type="text"
                 placeholder={mine === "true" ? "Search my patient..." : "Search patient..."}
@@ -64,11 +74,7 @@ export default function ShowPatients(){
                         ? `My Patients (${totalPatients})`
                         : `Patients (${totalPatients})`}
                 </h1>
-                {error && (
-                    <p className="text-red-500 mb-4">
-                        {error}
-                    </p>
-                )}
+                
                 {patient.length === 0 ? (
                     <p>No patients found...</p>
                 ) : (

@@ -8,8 +8,61 @@ import { showOnePatientAPI, editPatientAPI, deletePatientAPI } from "../services
 import { addNotesAPI, getNotesAPI, editNoteAPI } from "../services/noteService"
 import { createAttachmentAPI, getAttachmentAPI, downloadAttachmentAPI, deleteAttachmentAPI } from "../services/attachmentService"
 import { getLogsAPI } from "../services/logService";
+import axios from "axios";
 
-export default function PatientDetails({doctor}) {
+import { Doctor } from "../services/docService";
+import { Patient, PatientBody } from "../services/patientService";
+
+interface Attachment {
+    _id: string;
+    originalName: string;
+}
+
+interface Notebody{
+    _id: string;
+    content: string;
+    author: {
+        name: string;
+    };
+    createdAt: string;
+}
+
+
+interface Note {
+    content: string;
+}
+
+interface Attachment {
+    _id: string;
+    originalName: string;
+    uploadedBy: {
+        name: string;
+    };
+    fileSize: number;
+    url: string;
+}
+
+interface Log {
+    _id: string;
+    action:
+    | "PATIENT_CREATED"
+    | "PATIENT_UPDATED"
+    | "PATIENT_STATUS_UPDATED"
+    | "DOCTOR_REASSIGNED"
+    | "NOTE_ADDED"
+    | "NOTE_UPDATED"
+    | "ATTACHMENT_UPLOADED"
+    | "ATTACHMENT_DELETED";
+    performedBy: {
+        role: "admin" | "doctor";
+        name: string;
+    };
+    oldValue?: string;
+    newValue?: string;
+    createdAt: string;
+}
+
+export default function PatientDetails({doctor}:{doctor: Doctor[]}) {
 
     const { patientId } = useParams()
     const navigate = useNavigate()
@@ -18,17 +71,17 @@ export default function PatientDetails({doctor}) {
     const currentDoctorId = localStorage.getItem("userId")
     
 
-    const fileInputRef = useRef(null);
-    const [patient, setPatient] = useState();
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [patient, setPatient] = useState<Patient>();
     const [isEditing, setIsEditing] = useState(false);
-    const [editingNoteId, setEditingNoteId] = useState(null);
-    const [selectedFile, setSelectedFile] = useState(null);
-    const [attachments, setAttachments] = useState([]);
-    const [editedContent, setEditedContent] = useState("");
+    const [editingNoteId, setEditingNoteId] = useState<string|null>(null);
+    const [selectedFile, setSelectedFile] = useState<File|null>(null);
+    const [attachments, setAttachments] = useState<Attachment[]>([]);
+    const [editedContent, setEditedContent] = useState<string>("");
     const [loading, setLoading] = useState(true);
     const [content, setContent] = useState("");
-    const [note, setNote] = useState([]);
-    const [log, setLog] = useState([]);
+    const [note, setNote] = useState<Notebody[]>([]);
+    const [log, setLog] = useState<Log[]>([]);
     const [notesPage, setNotesPage] = useState(1);
     const [notesTotalPages, setNotesTotalPages] = useState(1);
     const [logPage, setLogPage] = useState(1);
@@ -36,8 +89,8 @@ export default function PatientDetails({doctor}) {
     const [activeTab, setActiveTab] = useState("notes");
 
 
-    const patientForm = useForm();
-    const noteForm = useForm();
+    const patientForm = useForm<PatientBody>();
+    const noteForm = useForm<Note>();
     const {
         handleSubmit,
         register,
@@ -58,16 +111,19 @@ export default function PatientDetails({doctor}) {
         async function fetchPatient() {
 
             try {
-
+                if(!patientId) return;
                 const res = await showOnePatientAPI(patientId)
                 setPatient(res.data.patient)
 
             }
             catch (err) {
-                console.error("Failed to fetch patient:", err);
-                toast.error(
-                    err.response?.data?.message || "Something went wrong"
-                );
+                if (axios.isAxiosError(err)) {
+                    toast.error(
+                        err.response?.data?.message || "Something went wrong"
+                    );
+                } else {
+                    toast.error("Something went wrong");
+                }
             }
             finally{
                 setLoading(false)
@@ -80,6 +136,7 @@ export default function PatientDetails({doctor}) {
     //handleEdit
 
     function handleEdit(){
+        if(!patient) return;
         setIsEditing(true)
         reset({
             patientInfo: {
@@ -100,7 +157,9 @@ export default function PatientDetails({doctor}) {
         })
     }
 
-    async function onSubmit(data){
+    async function onSubmit(data: PatientBody){
+        if(!patientId) return;
+
         try{
             const res = await editPatientAPI(patientId, data)
             setPatient(res.data.patient)
@@ -109,16 +168,20 @@ export default function PatientDetails({doctor}) {
             toast.success("Patient details updated successfully");
     
             
-        }catch(err){
-            console.error("Failed to update the patient:", err);
-            toast.error(
-                err.response?.data?.message || "Something went wrong"
-            );
+        } catch (err) {
+            if (axios.isAxiosError(err)) {
+                toast.error(
+                    err.response?.data?.message || "Something went wrong"
+                );
+            } else {
+                toast.error("Something went wrong");
+            }
         }
     
       }
       
-       async function handleDelete() {
+    async function handleDelete() {
+        if(!patientId) return;
        const confirmed = window.confirm(
                "Are you sure you want to delete this patient?"
            )
@@ -134,16 +197,21 @@ export default function PatientDetails({doctor}) {
                   navigate('/patients')
                 
             }
-                catch(err){
-                console.error("Failed to delete patient:", err);
-                    toast.error(
-                        error.response?.data?.message || "Something went wrong"
-                    );
-        }
+                catch (err) {
+                    if (axios.isAxiosError(err)) {
+                        toast.error(
+                            err.response?.data?.message || "Something went wrong"
+                        );
+                    } else {
+                        toast.error("Something went wrong");
+                    }
+                }
            
       }
 
-      async function handleUpload(e){
+    async function handleUpload(e: React.FormEvent<HTMLFormElement>){
+        if(!patientId) return;
+
           e.preventDefault();
             if(!selectedFile){
                 toast.error("Please select a file");
@@ -163,26 +231,38 @@ export default function PatientDetails({doctor}) {
                  fetchAttachment()
                  getLog()
              }
-             catch(err){
-                toast.error(err.response?.data?.message || "File upload failed")
-             }
+            catch (err) {
+                if (axios.isAxiosError(err)) {
+                    toast.error(
+                        err.response?.data?.message || "Something went wrong"
+                    );
+                } else {
+                    toast.error("Something went wrong");
+            }
+        }
+
       }
       useEffect(()=> {
         fetchAttachment()
       }, [])
       async function fetchAttachment() {
+        if(!patientId) return;
             try{
                 const fileAttachment = await getAttachmentAPI(patientId);
                 setAttachments(fileAttachment.data.attachments)
-            }catch(err){
-                console.error("Failed to fetch notes", err);
-                toast.error(
-                    err.response?.data?.message || "Something went wrong"
-                )
+            } catch (err) {
+                if (axios.isAxiosError(err)) {
+                    toast.error(
+                        err.response?.data?.message || "Something went wrong"
+                    );
+                } else {
+                    toast.error("Something went wrong");
+                }
             }
       } 
 
-    async function handleDownload(file) {
+    async function handleDownload(file:Attachment) {
+        if(!patientId) return;
         try {
             const res = await downloadAttachmentAPI(patientId, file._id);
 
@@ -200,15 +280,19 @@ export default function PatientDetails({doctor}) {
             link.remove();
             window.URL.revokeObjectURL(blobUrl);
         } catch (err) {
-            console.error('Failed to download the file', err)
-            toast.error(
-                err.response?.data?.message || "Download failed"
-            );
+            if (axios.isAxiosError(err)) {
+                toast.error(
+                    err.response?.data?.message || "Something went wrong"
+                );
+            } else {
+                toast.error("Something went wrong");
+            }
         }
     }
 
-    async function handleFileDelete(attachmentId) {
-        
+    async function handleFileDelete(attachmentId: string) {
+        if(!patientId) return;
+
         const confirmed = window.confirm(
             "Are you sure you want to delete this attachment?"
         )
@@ -222,29 +306,36 @@ export default function PatientDetails({doctor}) {
             fetchAttachment();
             getLog();
         }
-        catch(err){
-            console.error('Failed to delete the file', err)
-            toast.error(
-                err.response?.data?.message || "Download failed"
-            );
+        catch (err) {
+            if (axios.isAxiosError(err)) {
+                toast.error(
+                    err.response?.data?.message || "Something went wrong"
+                );
+            } else {
+                toast.error("Something went wrong");
+            }
         }
     }
 
-      async function noteSubmit(content){
+      async function noteSubmit(){
+          if (!patientId) return;
         try{
             const newNote = await addNotesAPI(content, patientId)
             fetchNotes()
             getLog()
             noteReset()
-        }catch(err){
-            console.error("Failed to add notes:", err);
-            toast.error(
-                err.response?.data?.message || "Something went wrong"
-            );    
+        } catch (err) {
+            if (axios.isAxiosError(err)) {
+                toast.error(
+                    err.response?.data?.message || "Something went wrong"
+                );
+            } else {
+                toast.error("Something went wrong");
+            }
         }
       }
 
-    function formatFileSize(bytes) {
+    function formatFileSize(bytes:number) {
         if (bytes < 1024) {
             return `${bytes} B`;
         }
@@ -261,26 +352,30 @@ export default function PatientDetails({doctor}) {
     }, [notesPage])
 
     async function fetchNotes() {
+        if (!patientId) return;
         try {
             const res = await getNotesAPI(patientId,notesPage)
             setNote(res.data.notes)
             setNotesTotalPages(res.data.totalPages)
         }
         catch (err) {
-            console.error("Failed to load notes:", err);
-            toast.error(
-                error.response?.data?.message || "Something went wrong"
-            );
-
+            if (axios.isAxiosError(err)) {
+                toast.error(
+                    err.response?.data?.message || "Something went wrong"
+                );
+            } else {
+                toast.error("Something went wrong");
+            }
         }
     }
 
-      async function handleNoteEdit(note) {
+      async function handleNoteEdit(note:Notebody) {
           setEditingNoteId(note._id);
           setEditedContent(note.content);
       }
       
-      async function handleNoteSave(noteId) {
+      async function handleNoteSave(noteId:string) {
+        if(!patientId) return;
         try{
 
             await editNoteAPI({content:editedContent}, patientId, noteId)
@@ -290,12 +385,14 @@ export default function PatientDetails({doctor}) {
             fetchNotes()
             getLog();
         }
-        catch(err){
-            console.error("Failed to update note:", err);
-            toast.error(
-                err.response?.data?.message || "Something went wrong"
-            );
-
+        catch (err) {
+            if (axios.isAxiosError(err)) {
+                toast.error(
+                    err.response?.data?.message || "Something went wrong"
+                );
+            } else {
+                toast.error("Something went wrong");
+            }
         }
       }
 
@@ -303,13 +400,12 @@ export default function PatientDetails({doctor}) {
         getLog()
       },[patientId, logPage])
       async function getLog() {
+        if(!patientId) return;
+
         const res = await getLogsAPI(patientId, logPage);
         setLogTotalPages(res.data.totalPages)
         setLog(res.data.log)
       }
-
-
-    
         const isAssignedDoctor =
             patient?.medicalRecord?.doctorAssigned?.userId === currentDoctorId
 
@@ -385,8 +481,6 @@ export default function PatientDetails({doctor}) {
 
                     <select
                         id="patientInfo.gender"
-                        type="text"
-                        placeholder="Patient gender"
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 
                         {...register("patientInfo.gender", {
@@ -449,8 +543,6 @@ export default function PatientDetails({doctor}) {
                     )}
                     <select
                         id="medicalRecord.status"
-                        type="text"
-                        placeholder="Patient Status"
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 
                         {...register("medicalRecord.status", {
@@ -608,7 +700,7 @@ export default function PatientDetails({doctor}) {
                                     <input
                                         type="file"
                                         ref={fileInputRef}
-                                        onChange={(e) => setSelectedFile(e.target.files[0])}
+                                        onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
                                         className="w-full border border-gray-300 rounded-lg px-3 py-2
                                                     file:mr-4 file:px-4 file:py-2 file:border-0
                                                     file:bg-blue-100 file:text-blue-700
@@ -711,7 +803,7 @@ export default function PatientDetails({doctor}) {
                             className="mb-6"
                         >
                             <textarea
-                                rows="1"
+                                rows={1}
                                 placeholder="Add a clinical note..."
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 {...noteRegister("content", {
@@ -768,7 +860,7 @@ export default function PatientDetails({doctor}) {
 
                                 <div className="space-y-3">
                                     <textarea
-                                        rows="1"
+                                        rows={1}
                                         value={editedContent}
                                         onChange={(e) => setEditedContent(e.target.value)}
                                         placeholder="Add a clinical note..."

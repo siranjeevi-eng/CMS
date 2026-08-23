@@ -24,8 +24,7 @@ function App() {
   const {insertUser, LoginUser,logout} = useUser()
   const { 
     doctor, 
-    addDoctor, 
-    docErr, 
+    addDoctor,
     doctorCount, 
     patientCount, 
     patientsAddedToday, 
@@ -68,7 +67,6 @@ function App() {
             path="/dashboard"
             element={
               <Dashboard
-                doctor={doctor}
                 doctorCount = {doctorCount}
                 patientCount = {patientCount}
                 patientsAddedToday = {patientsAddedToday}
@@ -76,8 +74,6 @@ function App() {
                 underTreatmentPatients = {underTreatmentPatients}
                 recoveredPatients = {recoveredPatients}
                 dischargedPatients = {dischargedPatients}
-                addDoctor={addDoctor}
-                docErr={docErr}
               />
             }
           />
@@ -86,7 +82,6 @@ function App() {
             element={<ShowDoctors
               addDoctor={addDoctor}
               doctorCount={doctorCount}
-              docErr={docErr}
               doctor={doctor}
             />}
           />

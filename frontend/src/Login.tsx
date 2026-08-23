@@ -1,16 +1,17 @@
 import { useForm } from "react-hook-form"
 import { Link } from "react-router-dom";
 
+import { LoginData } from "./services/authService";
 
-export default function Login({LoginUser}){
+export default function Login({LoginUser}: {LoginUser: (data:LoginData) => Promise<void>}){
     
     const {
     register,
     handleSubmit,
     formState:{errors}
-    } = useForm()
+    } = useForm<LoginData>()
 
-    async function onSubmit(data){
+    async function onSubmit(data: LoginData){
         await LoginUser(data)
     }
 

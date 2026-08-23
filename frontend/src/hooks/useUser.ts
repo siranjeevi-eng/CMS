@@ -1,17 +1,17 @@
 import { useState } from "react";
+import axios from "axios";
+import type { SignupData, LoginData } from "../services/authService";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { addUser, loginUser } from "../services/authService";
 
 
 export default function useUser(){
-    const [user, setUser] = useState([])
     const navigate = useNavigate()
 
-    async function insertUser(data){
+    async function insertUser(data: SignupData){
         try{
             const response = await addUser(data)
-            setUser(prev => [...prev, response.data])
 
             toast.success("User added successfully");
 
@@ -21,15 +21,17 @@ export default function useUser(){
 
             navigate("/dashboard")
 
-        }catch(err){
-            console.error(err.message)
-            toast.error(
-                err.response?.data?.message || "Something went wrong"
-            );
-            
+        } catch (err) {
+            if (axios.isAxiosError(err)) {
+                toast.error(
+                    err.response?.data?.message || "Something went wrong"
+                );
+            } else {
+                toast.error("Something went wrong");
+            }
         }
     }
-    async function LoginUser(data){
+    async function LoginUser(data: LoginData){
         try{
             const response = await loginUser(data)
 
@@ -48,11 +50,14 @@ export default function useUser(){
             }
         }
 
-        catch(err){
-            console.error("Logged in failed", err.response.data.message)
-            toast.error(
-                err.response?.data?.message || "Something went wrong"
-            );
+        catch (err) {
+            if (axios.isAxiosError(err)) {
+                toast.error(
+                    err.response?.data?.message || "Something went wrong"
+                );
+            } else {
+                toast.error("Something went wrong");
+            }
         }
     }
 
@@ -63,5 +68,5 @@ export default function useUser(){
         navigate("/login")
     }
 
-    return{user, insertUser, LoginUser, logout}
+    return{ insertUser, LoginUser, logout}
 }

@@ -1,19 +1,21 @@
 
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
+import type {SignupData} from "./services/authService";
 
+interface Props{
+    insertUser: (data: SignupData) => Promise<void>
+}
 
-export default function Signup({insertUser, err}){
+export default function Signup({insertUser}: Props){
     
-
-
 const {
  register,
  handleSubmit,
  formState:{errors}
-} = useForm();
+} = useForm<SignupData>();
 
-async function onSubmit(data){
+async function onSubmit(data: SignupData){
  await insertUser(data);
 }
 
@@ -30,12 +32,7 @@ async function onSubmit(data){
                     Sign up to access the Clinic Management System
                 </p>
 
-                {err && (
-                    <p className="mb-4 rounded bg-red-100 p-2 text-red-600">
-                        {err}
-                    </p>
-                )}
-
+          
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
                     <div>
@@ -50,12 +47,6 @@ async function onSubmit(data){
                             className="w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             {...register("name")}
                         />
-
-                        {errors.name && (
-                            <p className="mt-1 text-sm text-red-500">
-                                {errors.name.message}
-                            </p>
-                        )}
                     </div>
 
                     <div>

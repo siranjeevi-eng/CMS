@@ -1,10 +1,16 @@
 import { useForm } from "react-hook-form"
 import { Link } from "react-router-dom"
 import { useState } from "react"
-
+import type { DoctorBody, Doctor } from "./services/docService";
 import { UserRound, Smile, Hospital, ChevronRight } from "lucide-react";
 
-export default function ShowDoctors({doctor, addDoctor, docErr, doctorCount}){
+interface DoctorProps{
+    doctor: Doctor[];
+    addDoctor: (data: DoctorBody) => Promise<void>;
+    doctorCount: number
+}
+
+export default function ShowDoctors({doctor, addDoctor, doctorCount}: DoctorProps){
 
     const role = localStorage.getItem("role")
     console.log(role)
@@ -15,9 +21,9 @@ export default function ShowDoctors({doctor, addDoctor, docErr, doctorCount}){
         handleSubmit,
         reset,
         formState: { errors }
-    } = useForm()
+    } = useForm<DoctorBody>()
 
-    function onSubmit(data) {
+    function onSubmit(data:DoctorBody) {
         addDoctor(data)
         reset()
     }
@@ -105,11 +111,6 @@ export default function ShowDoctors({doctor, addDoctor, docErr, doctorCount}){
                             </div>
                         )}
 
-                        {docErr && (
-                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mt-4">
-                                {docErr}
-                            </div>
-                        )}
                     </div>
 
                     {/* Right Section - Admin Only */}

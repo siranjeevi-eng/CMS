@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-export default function Navbar({logout}){
+export default function Navbar({logout}: {logout:() => void}){
 
     const role = localStorage.getItem('role');
     return (

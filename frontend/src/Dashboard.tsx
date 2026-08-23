@@ -1,10 +1,24 @@
 import { useForm } from "react-hook-form"
 import { useState, useEffect } from "react";
+import axios from "axios";
 import { UserRound, Smile, Hospital, ChevronRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom"
 import { getPatientsAPI } from "./services/patientService"
 import { formatDistanceToNow } from "date-fns";
 import toast from "react-hot-toast";
+
+import type { Patient } from "./services/patientService";
+
+interface DashboardProps {
+    doctorCount: number;
+    patientCount: number;
+    patientsAddedToday: number;
+    patientsAddedThisMonth: number;
+    underTreatmentPatients: number;
+    recoveredPatients: number;
+    dischargedPatients: number;
+}
+
 
 export default function Dashboard({ 
     doctorCount, 
@@ -14,10 +28,10 @@ export default function Dashboard({
     underTreatmentPatients, 
     recoveredPatients, 
     dischargedPatients
- }){
+ }: DashboardProps){
 
     const navigate = useNavigate()
-    const [patients, setPatients] = useState([])
+    const [patients, setPatients] = useState <Patient[]>([])
     const role = localStorage.getItem("role");
 
     useEffect(()=>{
@@ -28,9 +42,14 @@ export default function Dashboard({
             const res = await getPatientsAPI("",1,3,"","")
             setPatients(res.data.patients)
         }
-        catch(err){
-            toast.error("Something went wrong", err.message)
-            console.error(err.message)
+        catch (err) {
+            if (axios.isAxiosError(err)) {
+                toast.error(
+                    err.response?.data?.message || "Something went wrong"
+                );
+            } else {
+                toast.error("Something went wrong");
+            }
         }
     }
 

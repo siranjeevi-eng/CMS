@@ -2,8 +2,16 @@ import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
 import { addPatientAPI } from "../services/patientService"
 import { useState } from "react"
+import axios from "axios"
+import toast from "react-hot-toast"
 
-export default function AddPatient({doctor}){
+import type { Doctor } from "../services/docService"
+import type { PatientBody } from "../services/patientService"
+interface DoctorProps{
+    doctor: Doctor[];
+}
+
+export default function AddPatient({doctor}:DoctorProps){
    
     const navigate = useNavigate()
     const [error, setError] = useState("") 
@@ -11,17 +19,21 @@ export default function AddPatient({doctor}){
         register,
         handleSubmit,
         formState:{errors}
-    } = useForm()
+    } = useForm<PatientBody>()
 
-    async function onSubmit(data) {
+    async function onSubmit(data: PatientBody) {
         try {
             await addPatientAPI(data)
             alert("Patient added successfully")
             navigate('/patients')
         } catch (err) {
-            console.error("Failed to add patient:", err)
-            setError(err.response?.data?.message)
-
+            if (axios.isAxiosError(err)) {
+                toast.error(
+                    err.response?.data?.message || "Something went wrong"
+                );
+            } else {
+                toast.error("Something went wrong");
+            }
         }
     }
     
@@ -95,8 +107,6 @@ export default function AddPatient({doctor}){
               
                 <select
                     id="patientInfo.gender"
-                    type="text"
-                    placeholder="Patient gender"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 
                     {...register("patientInfo.gender", {
@@ -157,8 +167,6 @@ export default function AddPatient({doctor}){
                 )}
                 <select
                     id="medicalRecord.status"
-                    type="text"
-                    placeholder="Patient Status"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 
                     {...register("medicalRecord.status", {

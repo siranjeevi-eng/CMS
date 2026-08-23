@@ -4,11 +4,14 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { showDoctorAPI, editDoctorAPI, deleteDoctorAPI } from "./services/docService";
 import { useForm } from "react-hook-form"
+import axios from "axios";
 
-import { UserRound, Smile, Hospital, ChevronRight } from "lucide-react";
-
+import type { DoctorBody, Doctor } from "./services/docService";
+import type { Patient } from "./services/patientService";
 
 export default function DoctorDetails() {
+
+
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -19,34 +22,42 @@ export default function DoctorDetails() {
     register,
     reset,
     formState: {errors}
-  } = useForm()
-  const [doc, setDoc] = useState()
-  const [patients, setPatients] = useState([])
+  } = useForm<DoctorBody>()
+
+  const [doc, setDoc] = useState<Doctor>()
+  const [patients, setPatients] = useState<Patient[]>([])
   const [loading, setLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
 
-  useEffect(() => { async function fetchDoctor() {
+  useEffect(() => {
+    if (!id) return;
+    async function fetchDoctor(id: string) {
     try{
       const res = await showDoctorAPI(id)
       setDoc(res.data.doctor)
       setPatients(res.data.patients)
-    }catch(err){
-      console.error('Unable to fetch the doctor details',err.message)
-      toast.error(
-        error.response?.data?.message || "Something went wrong"
-      );
-    }finally{
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        toast.error(
+          err.response?.data?.message || "Something went wrong"
+        );
+      } else {
+        toast.error("Something went wrong");
+      }
+    } finally{
       setLoading(false)
     }
     
   }
 
-    fetchDoctor()
+    fetchDoctor(id)
 
   }, [id]);
 
 
   function handleEdit(){
+    if(!doc) return;
+
     setIsEditing(true)
     reset({
       name: doc.name,
@@ -56,20 +67,24 @@ export default function DoctorDetails() {
     });
   }
 
-  async function handleDelete(id){
+  async function handleDelete(id: string){
     try{
       await deleteDoctorAPI(id)
       toast.success("Doctor deleted successfully");
       navigate('/dashboard')
-    }catch(err){
-      console.error(err.message)
-      toast.error(
-        error.response?.data?.message || "Something went wrong"
-      );
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        toast.error(
+          err.response?.data?.message || "Something went wrong"
+        );
+      } else {
+        toast.error("Something went wrong");
+      }
     }
   }
 
-  async function onSubmit(data){
+  async function onSubmit(data: DoctorBody){
+    if(!id) return;
     try{
         const res = await editDoctorAPI(id, data)
         setDoc(res.data.doctor)
@@ -78,10 +93,13 @@ export default function DoctorDetails() {
 
         
     } catch (err) {
-      console.error(err.message)
-      toast.error(
-        error.response?.data?.message || "Something went wrong"
-      );
+      if (axios.isAxiosError(err)) {
+        toast.error(
+          err.response?.data?.message || "Something went wrong"
+        );
+      } else {
+        toast.error("Something went wrong");
+      }
     }
 
   }
@@ -230,7 +248,10 @@ export default function DoctorDetails() {
                   </button>
 
                   <button
-                    onClick={() => handleDelete(id)}
+                    onClick={() => {
+                      if (!id) return;
+                      handleDelete(id);
+                    }}
                     className="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition"
                   >
                     Delete

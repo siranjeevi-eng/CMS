@@ -1,10 +1,12 @@
 
 import { useEffect, useState } from "react";
+import axios from "axios";
 import { getDoctor, AddDoctorAPI, dashboardAPI } from "../services/docService"
+import type { DoctorBody } from "../services/docService";
+import toast from "react-hot-toast";
 
 
 export default function useDocotor(){
-    const [docErr,setDocErr] = useState(null);
     const [doctor, setDoctor] = useState([]);
     const [doctorCount, setDcotorCount] = useState(0);
     const [patientCount, setPatientCount] = useState(0);
@@ -19,8 +21,14 @@ export default function useDocotor(){
             try{
                 const response = await getDoctor()
                 setDoctor(response.data.doctors);
-            }catch(err){
-                setDocErr(err.message)
+            } catch (err) {
+                if (axios.isAxiosError(err)) {
+                    toast.error(
+                        err.response?.data?.message || "Something went wrong"
+                    );
+                } else {
+                    toast.error("Something went wrong");
+                }
             }
         }
 
@@ -42,27 +50,37 @@ export default function useDocotor(){
             setDischargedPatients(response.data.dischargedPatients);
         }
         catch (err) {
-            setDocErr(err.message)
-        }
-    }
+            if (axios.isAxiosError(err)) {
+                toast.error(
+                    err.response?.data?.message || "Something went wrong"
+                );
+            } else {
+                toast.error("Something went wrong");
+            }
+        }    }
 
     useEffect(()=>{
         fetchDashboard()
     },[])
 
-    const addDoctor = async function (data) {
+    const addDoctor = async function (data: DoctorBody) {
         try
         {
             await AddDoctorAPI(data)
             fetchDoctor()
-        }catch(err){
-            setDocErr(err.response?.data?.message ||
-                "Something went wrong")
+        } catch (err) {
+            if (axios.isAxiosError(err)) {
+                toast.error(
+                    err.response?.data?.message || "Something went wrong"
+                );
+            } else {
+                toast.error("Something went wrong");
+            }
         }
     }
 
     
 
-    return { docErr, doctor, addDoctor, doctorCount, patientCount, patientsAddedToday, patientsAddedThisMonth, underTreatmentPatients, recoveredPatients, dischargedPatients}
+    return { doctor, addDoctor, doctorCount, patientCount, patientsAddedToday, patientsAddedThisMonth, underTreatmentPatients, recoveredPatients, dischargedPatients}
 
 }
