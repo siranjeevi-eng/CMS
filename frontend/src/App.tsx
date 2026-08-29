@@ -7,9 +7,7 @@ import Login from './Login'
 import Home from './Home'
 import Dashboard from './Dashboard'
 import ShowDoctors from './ShowDoctors';
-import Layout from './layouts/Layout'
 import useUser from './hooks/useUser'
-import useDoctor from './hooks/useDoctor'
 import DoctorDetails from './DoctorDetails'
 import ShowPatients from './pages/ShowPatients'
 import PatientDetails from './pages/PatientDetails'
@@ -21,19 +19,8 @@ import NotFound from './NotFound'
 
 
 function App() {
-  const {insertUser, LoginUser,logout} = useUser()
-  const { 
-    doctor, 
-    addDoctor,
-    doctorCount, 
-    patientCount, 
-    patientsAddedToday, 
-    patientsAddedThisMonth,
-    underTreatmentPatients,
-    recoveredPatients,
-    dischargedPatients
-  } = useDoctor()
-
+  const {insertUser, LoginUser} = useUser()
+  
   return (
     <>
       <Toaster
@@ -66,24 +53,12 @@ function App() {
           <Route
             path="/dashboard"
             element={
-              <Dashboard
-                doctorCount = {doctorCount}
-                patientCount = {patientCount}
-                patientsAddedToday = {patientsAddedToday}
-                patientsAddedThisMonth={patientsAddedThisMonth}
-                underTreatmentPatients = {underTreatmentPatients}
-                recoveredPatients = {recoveredPatients}
-                dischargedPatients = {dischargedPatients}
-              />
+              <Dashboard/>
             }
           />
           <Route
             path='/doctors'
-            element={<ShowDoctors
-              addDoctor={addDoctor}
-              doctorCount={doctorCount}
-              doctor={doctor}
-            />}
+            element={<ShowDoctors/>}
           />
 
           <Route
@@ -98,17 +73,13 @@ function App() {
 
           <Route
             path="/patient/:patientId"
-            element={<PatientDetails 
-            doctor = {doctor}
-            />}
+            element={<PatientDetails />}
           />
 
           <Route
             path="/patient/add"
             element={
-            <AddPatient
-            doctor = {doctor} 
-            />}
+            <AddPatient/>}
           />
         </Route>
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { useParams } from "react-router-dom"
-import { useNavigate, Link } from "react-router-dom"
+import { useNavigate, Link, useOutletContext } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import toast from "react-hot-toast";
 
@@ -12,6 +12,10 @@ import axios from "axios";
 
 import { Doctor } from "../services/docService";
 import { Patient, PatientBody } from "../services/patientService";
+
+interface DoctorContext {
+    doctor: Doctor[];
+}
 
 interface Attachment {
     _id: string;
@@ -62,7 +66,9 @@ interface Log {
     createdAt: string;
 }
 
-export default function PatientDetails({doctor}:{doctor: Doctor[]}) {
+export default function PatientDetails() {
+
+    const { doctor } = useOutletContext<DoctorContext>();
 
     const { patientId } = useParams()
     const navigate = useNavigate()

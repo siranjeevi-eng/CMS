@@ -1,16 +1,19 @@
 import { useForm } from "react-hook-form"
-import { Link } from "react-router-dom"
+import { Link, useOutletContext } from "react-router-dom"
 import { useState } from "react"
 import type { DoctorBody, Doctor } from "./services/docService";
-import { UserRound, Smile, Hospital, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
-interface DoctorProps{
+interface DoctorContext {
     doctor: Doctor[];
     addDoctor: (data: DoctorBody) => Promise<void>;
-    doctorCount: number
+    doctorCount: number;
 }
 
-export default function ShowDoctors({doctor, addDoctor, doctorCount}: DoctorProps){
+export default function ShowDoctors(){
+
+    const { doctor, addDoctor, doctorCount } =
+        useOutletContext<DoctorContext>();
 
     const role = localStorage.getItem("role")
     console.log(role)

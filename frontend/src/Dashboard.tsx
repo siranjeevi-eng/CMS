@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form"
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useOutletContext } from "react-router-dom";
 import { UserRound, Smile, Hospital, ChevronRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom"
 import { getPatientsAPI } from "./services/patientService"
@@ -9,7 +10,7 @@ import toast from "react-hot-toast";
 
 import type { Patient } from "./services/patientService";
 
-interface DashboardProps {
+interface DoctorContext {
     doctorCount: number;
     patientCount: number;
     patientsAddedToday: number;
@@ -20,15 +21,17 @@ interface DashboardProps {
 }
 
 
-export default function Dashboard({ 
-    doctorCount, 
-    patientCount, 
-    patientsAddedToday, 
-    patientsAddedThisMonth, 
-    underTreatmentPatients, 
-    recoveredPatients, 
-    dischargedPatients
- }: DashboardProps){
+export default function Dashboard(){
+
+    const {
+        doctorCount,
+        patientCount,
+        patientsAddedToday,
+        patientsAddedThisMonth,
+        underTreatmentPatients,
+        recoveredPatients,
+        dischargedPatients
+    } = useOutletContext<DoctorContext>();
 
     const navigate = useNavigate()
     const [patients, setPatients] = useState <Patient[]>([])

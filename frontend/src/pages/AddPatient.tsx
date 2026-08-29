@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useOutletContext } from "react-router-dom"
 import { addPatientAPI } from "../services/patientService"
 import { useState } from "react"
 import axios from "axios"
@@ -7,12 +7,12 @@ import toast from "react-hot-toast"
 
 import type { Doctor } from "../services/docService"
 import type { PatientBody } from "../services/patientService"
-interface DoctorProps{
+interface DoctorContext {
     doctor: Doctor[];
 }
 
-export default function AddPatient({doctor}:DoctorProps){
-   
+export default function AddPatient() {
+    const { doctor } = useOutletContext<DoctorContext>();
     const navigate = useNavigate()
     const [error, setError] = useState("") 
     const {
