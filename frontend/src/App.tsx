@@ -9,7 +9,7 @@ import Dashboard from './Dashboard'
 import ShowDoctors from './ShowDoctors';
 import Layout from './layouts/Layout'
 import useUser from './hooks/useUser'
-import useDocotor from './hooks/useDoctor'
+import useDoctor from './hooks/useDoctor'
 import DoctorDetails from './DoctorDetails'
 import ShowPatients from './pages/ShowPatients'
 import PatientDetails from './pages/PatientDetails'
@@ -32,7 +32,7 @@ function App() {
     underTreatmentPatients,
     recoveredPatients,
     dischargedPatients
-  } = useDocotor()
+  } = useDoctor()
 
   return (
     <>
